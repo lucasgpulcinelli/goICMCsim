@@ -7,6 +7,8 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 )
 
+// all shortcuts have associated commands in the menu bar, so they just call
+// their counterparts from menuActions.go.
 var (
   shortOneInst = desktop.CustomShortcut{KeyName: fyne.KeyTab, Modifier: fyne.KeyModifierControl}
   shortUntilHalt = desktop.CustomShortcut{KeyName: fyne.KeyH, Modifier: fyne.KeyModifierControl}
@@ -14,6 +16,8 @@ var (
   shortStop = desktop.CustomShortcut{KeyName: fyne.KeyP, Modifier: fyne.KeyModifierControl}
 )
 
+// handleShortcuts runs whem every shortcut is triggered, responsible for
+// calling the associated menu action.
 func handleShortcuts(sh fyne.Shortcut) {
   desktopSh, ok := sh.(*desktop.CustomShortcut)
   if !ok {
@@ -35,9 +39,10 @@ func handleShortcuts(sh fyne.Shortcut) {
   }
 }
 
+// setupShortcuts adds all shortcuts from the simulator to a window.
 func setupShortcuts(w fyne.Window) {
-  w.Canvas().AddShortcut(&shortOneInst, handleShortcuts) 
-  w.Canvas().AddShortcut(&shortUntilHalt, handleShortcuts) 
-  w.Canvas().AddShortcut(&shortReset, handleShortcuts) 
-  w.Canvas().AddShortcut(&shortStop, handleShortcuts) 
+  w.Canvas().AddShortcut(&shortOneInst, handleShortcuts)
+  w.Canvas().AddShortcut(&shortUntilHalt, handleShortcuts)
+  w.Canvas().AddShortcut(&shortReset, handleShortcuts)
+  w.Canvas().AddShortcut(&shortStop, handleShortcuts)
 }

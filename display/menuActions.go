@@ -10,9 +10,11 @@ import (
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
 )
 
+// updateAllDisplay refreshes the full window for the simulator and scrolls the
+// instruction to the current instruction de PC is pointing to
 func updateAllDisplay() {
 	instructionList.Refresh()
-  draw.Refresh()
+	draw.Refresh()
 	for i, widget := range registers {
 		var v uint16
 		switch i {
@@ -30,6 +32,8 @@ func updateAllDisplay() {
 	instructionList.ScrollTo(widget.ListItemID(icmcSimulator.PC))
 }
 
+// fyneReadMIFCode reads the instructions from a code MIF file and loads them
+// into the simulator.
 func fyneReadMIFCode(f io.ReadCloser, err error) {
 	if err != nil {
 		log.Println(err.Error())
@@ -40,6 +44,7 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 		return
 	}
 
+	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
 		log.Println(err.Error())
@@ -54,17 +59,22 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 
 	simulatorMutex.Lock()
 
+	// read the data in 16 bit words into the ICMC simulator code
 	for i := 0; i < len(data)/2; i += 2 {
 		icmcSimulator.Code[i/2] = (uint16(data[i]) << 8) + uint16(data[i+1])
 	}
 
 	simulatorMutex.Unlock()
 
+	// reset the viewport and restart the whole simulator, because old values for
+	// registers don't make sense anymore
 	draw.Reset()
 	restartCode()
 	f.Close()
 }
 
+// fyneReadMIFChar reads the character mapping definition from a MIF file and
+// loads it into the simulator.
 func fyneReadMIFChar(f io.ReadCloser, err error) {
 	if err != nil {
 		log.Println(err.Error())
@@ -75,18 +85,24 @@ func fyneReadMIFChar(f io.ReadCloser, err error) {
 		return
 	}
 
+	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
 		log.Println(err.Error())
 		return
 	}
 
+	// set the charmap to draw with
 	draw.SetCharData(p.GetData())
 
+	// and update the display: the charmap can be changed while the simulator is
+	// running!
 	updateAllDisplay()
 	f.Close()
 }
 
+// restartCode resets the whole simulator to their default state,
+// the same when first initialized.
 func restartCode() {
 	simulatorMutex.Lock()
 	icmcSimulator.Reset()
@@ -96,13 +112,17 @@ func restartCode() {
 	updateAllDisplay()
 }
 
+// runUntilHalt runs the current instruction and the next ones until a halt is
+// found or the code crashes.
 func runUntilHalt() {
+	// do everything in a separate goroutine, because fyne uses a display
+	// goroutine to run this function, meaning the display would malfunction when
+	// trying to update stuff while the processor is running
 	go func() {
-		if !simulatorMutex.TryLock() {
-			return
-		}
+		simulatorMutex.Lock()
 		err := icmcSimulator.RunUntilHalt()
 		simulatorMutex.Unlock()
+
 		updateAllDisplay()
 		if err != nil {
 			log.Println(err.Error())
@@ -111,6 +131,7 @@ func runUntilHalt() {
 	}()
 }
 
+// runOneInst runs the instruction at the PC and increments it.
 func runOneInst() {
 	simulatorMutex.Lock()
 	err := icmcSimulator.RunInstruction()
@@ -119,10 +140,10 @@ func runOneInst() {
 	updateAllDisplay()
 	if err != nil {
 		log.Println(err.Error())
-    icmcSimulator.PC++
 	}
 }
 
+// shortcutsHelp creates small help window to show shortcuts and what they do.
 func shortcutsHelp() {
 	updateAllDisplay()
 	log.Println("not implemented")

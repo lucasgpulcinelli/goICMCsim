@@ -69,15 +69,14 @@ func (pr *ICMCProcessor) RunInstruction() error {
 
 	inst, ok := AllInstructions[currentOpcode]
 	if !ok {
+		pr.PC++ // skip this instruction in order not to loop on the same error
 		return fmt.Errorf("instruction does not exist")
 	}
 
-	if err := inst.Execute(pr); err != nil {
-		return err
-	}
+	err := inst.Execute(pr)
 
 	pr.PC += uint16(inst.Size)
-	return nil
+	return err
 }
 
 func (pr *ICMCProcessor) RunUntilHalt() error {

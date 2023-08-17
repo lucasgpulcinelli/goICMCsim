@@ -14,10 +14,14 @@ var (
 	initialChar = flag.String("charmif", "", "character MIF file to use at startup")
 )
 
+// getFiles reads from the command line flags provided both the initial code MIF
+// and initial character mapping MIF, and returns them to the caller.
 func getFiles() (codem, charm io.ReadCloser) {
 	var err error
 
+	// parse all the command line flags
 	flag.Parse()
+
 	if *initialCode != "" {
 		codem, err = os.Open(*initialCode)
 		if err != nil {
