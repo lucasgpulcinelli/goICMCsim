@@ -7,7 +7,7 @@ func execPUSH(pr *ICMCProcessor) error {
 
 	inst := pr.Data[pr.PC]
 
-  // see if we are pushing the flag register
+	// see if we are pushing the flag register
 	if inst&(1<<6) != 0 {
 		// because a sequence of push fr, pop rX is considered seriously bad
 		// practice, the meaning in the sequence of bits in the flag register do
@@ -36,7 +36,7 @@ func execPOP(pr *ICMCProcessor) error {
 
 	pr.SP++
 
-  // see if we are popping the flag register
+	// see if we are popping the flag register
 	if inst&(1<<6) != 0 {
 		pr.fr = flagRegisterState(pr.Data[pr.SP])
 	} else {

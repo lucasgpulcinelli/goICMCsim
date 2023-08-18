@@ -143,7 +143,7 @@ func FyneOutChar(c, pos uint16) error {
 	if pos >= 40*30 {
 		return fmt.Errorf("invalid position to draw on")
 	}
-	if byte(c) > 127 || byte(c<<8) > 16 {
+	if byte(c) > 127 || byte(c>>8) > 16 {
 		return fmt.Errorf("invalid character to print")
 	}
 

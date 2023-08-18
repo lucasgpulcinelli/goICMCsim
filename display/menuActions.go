@@ -60,7 +60,7 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 	simulatorMutex.Lock()
 
 	// read the data in 16 bit words into the ICMC simulator code
-	for i := 0; i < len(data)/2; i += 2 {
+	for i := 0; i < len(data); i += 2 {
 		icmcSimulator.Code[i/2] = (uint16(data[i]) << 8) + uint16(data[i+1])
 	}
 
