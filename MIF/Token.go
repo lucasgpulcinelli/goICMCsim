@@ -2,38 +2,39 @@ package MIF
 
 import "fmt"
 
+// Token identifies a single syntatical unit in a MIF program.
 type Token byte
 
 const (
-	TokNone    Token = iota // for errors
-	TokEOF                  // EOF
-	TokIdent                // identifiers
-	TokEq                   // =
-	TokStmtEnd              // ;
-	TokContent              // CONTENT
-	TokBegin                // BEGIN
-	TokOpen                 // [
-	TokClose                // ]
-	TokNumber               // numbers
-	TokRange                // ..
-	TokColon                // :
-	TokEnd                  // END
+	TokNone Token = iota // for errors
+	TokEOF
+	TokIdent
+	TokEq
+	TokStmtEnd
+	TokContent
+	TokBegin
+	TokOpen
+	TokClose
+	TokNumber
+	TokRange
+	TokColon
+	TokEnd
 )
 
 var TokMap = map[Token]string{
-	TokNone:    "TokNone",
-	TokEOF:     "TokEOF",
-	TokIdent:   "TokIdent",
-	TokEq:      "TokEq",
-	TokStmtEnd: "TokStmtEnd",
-	TokContent: "TokContent",
-	TokBegin:   "TokBegin",
-	TokOpen:    "TokOpen",
-	TokClose:   "TokClose",
-	TokNumber:  "TokNumber",
-	TokRange:   "TokRange",
-	TokColon:   "TokColon",
-	TokEnd:     "TokEnd",
+	TokNone:    "<TokNone>",
+	TokEOF:     "EOF",
+	TokIdent:   "identifier",
+	TokEq:      "'='",
+	TokStmtEnd: "';'",
+	TokContent: "CONTENT",
+	TokBegin:   "BEGIN",
+	TokOpen:    "'['",
+	TokClose:   "']'",
+	TokNumber:  "number",
+	TokRange:   "'..'",
+	TokColon:   "':'",
+	TokEnd:     "END",
 }
 
 func (tok Token) String() string {

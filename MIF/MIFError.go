@@ -2,6 +2,8 @@ package MIF
 
 import "fmt"
 
+// MIFError denotes a parsing or lexer error at a certain position of a MIF
+// file.
 type MIFError struct {
 	component string
 	line      int

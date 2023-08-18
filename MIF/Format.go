@@ -5,39 +5,28 @@ import (
 	"strconv"
 )
 
+// Format defines the possible formats the MIF data can have
 type Format int
 
 const (
-	FormatNone = iota
-	FormatBin
-	FormatUnsiged
+	FormatNone    = 0
+	FormatBin     = 2
+	FormatUnsiged = 10
 )
 
-func (p *Parser) toFormat(v string) (Format, error) {
-	switch v {
-	case "UNS":
-		return FormatUnsiged, nil
-	case "BIN":
-		return FormatBin, nil
-	}
-
-	return FormatNone, p.newError(fmt.Sprintf("expected Format type, not %s", v))
+// formatMap is the mapping of format identifiers to their respective Formats.
+var formatMap = map[string]Format{
+	"BIN": FormatBin,
+	"UNS": FormatUnsiged,
 }
 
-func (p *Parser) readWithFormat(v string, f Format) (ret int64, err error) {
-	switch f {
-	case FormatNone:
-		return 0, p.newError("invalid format provided")
-	case FormatBin:
-		ret, err = strconv.ParseInt(v, 2, 64)
-		if err != nil {
-			return
-		}
-  case FormatUnsiged:
-		ret, err = strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			return
-		}
+// readWithFormat reads a string containing a number in a specified MIF format
+// if the format has not been provided (aka f == FormatNone), the value
+// returned is implied from the prefix (0x, 0b, 0 or decimal).
+func (p *Parser) readWithFormat(v string, f Format) (int64, error) {
+	ret, err := strconv.ParseInt(v, int(f), 64)
+	if err != nil {
+		err = p.newError(fmt.Sprintf("invalid number: %s", err.Error()))
 	}
-	return
+	return ret, err
 }

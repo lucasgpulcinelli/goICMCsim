@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+// Parser represents a complete MIF parser driver struct, with a Lexer and
+// semantic data.
 type Parser struct {
 	l          *Lexer
 	depth      int64
@@ -33,6 +35,8 @@ func (p *Parser) newError(cause string) error {
 	return MIFError{"parser", l, c, cause}
 }
 
+// expect reads a single token, and if it is not in the list provided, returns
+// an error.
 func (p *Parser) expect(expected []Token) (Token, error) {
 	tok, err := p.l.NextToken()
 	if err != nil {
@@ -51,6 +55,8 @@ func (p *Parser) expect(expected []Token) (Token, error) {
 	)
 }
 
+// readAddress reads a single number from the input and returns it's value as
+// interpreted by the address Format.
 func (p *Parser) readAddress() (int64, error) {
 	if _, err := p.expect([]Token{TokNumber}); err != nil {
 		return 0, err

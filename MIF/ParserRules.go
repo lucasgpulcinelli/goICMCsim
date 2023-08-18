@@ -4,7 +4,20 @@ import (
 	"strconv"
 )
 
-// MIF -> header data EOF
+// All functions here implement the recursive descend parser for a MIF file,
+// considering the formal syntax definition of a MIF.
+// All functions are (in the same way as in the go compiler) preceded by a
+// comment with a syntatical rule that the function define.
+// In the comments, consider Start as the initial symbol, eps as the empty
+// production, and | as an alternative for that production.
+// Because the MIF syntax is simple, the language defined is LL(1), meaning
+// alternatives can be decided by reading just a single token.
+// TODO: confirm if the absolutely complete syntax is defined.
+
+// Parse initiates the recursive descend parsing of a MIF file.
+// After the function returns, all other Parser methods are populated with
+// valid data.
+// Start -> header data EOF
 func (p *Parser) Parse() error {
 	var err error
 
@@ -73,17 +86,24 @@ func (p *Parser) declaration() (err error) {
 		return
 	}
 
+	var ok bool
 	switch ident {
 	case "DEPTH":
 		p.depth, err = strconv.ParseInt(value, 10, 64)
 	case "WIDTH":
 		p.width, err = strconv.ParseInt(value, 10, 64)
 	case "DATA_RADIX":
-		p.dataFormat, err = p.toFormat(value)
+		p.dataFormat, ok = formatMap[value]
+		if !ok {
+			err = p.newError("invalid format")
+		}
 	case "ADDRESS_RADIX":
-		p.addrFormat, err = p.toFormat(value)
+		p.addrFormat, ok = formatMap[value]
+		if !ok {
+			err = p.newError("invalid format")
+		}
 	default:
-		err = p.newError("Unexpected identifier")
+		err = p.newError("invalid identifier")
 	}
 	return
 }
@@ -155,7 +175,7 @@ func (p *Parser) definition() error {
 	for i := start; i <= end; i++ {
 		kvalue := values[k]
 		for j := int64(0); j < p.width/8; j++ {
-			p.dataArray[i*p.width/8+j] = byte(kvalue >> (p.width - (j+1)*8)) 
+			p.dataArray[i*p.width/8+j] = byte(kvalue >> (p.width - (j+1)*8))
 		}
 		k = (k + 1) % len(values)
 	}
