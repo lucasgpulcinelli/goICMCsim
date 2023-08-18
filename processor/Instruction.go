@@ -1,7 +1,10 @@
 package processor
 
+import "fmt"
+
 type Opcode byte
 
+// all opcodes in the ICMC architecture
 const (
 	OpNOP     Opcode = 0b000000
 	OpADD            = 0b100000
@@ -34,88 +37,103 @@ const (
 	OpCSCARRY        = 0b001000
 )
 
+// Instruction describes all data a single instruction needs to be fully
+// described for execution and display.
 type Instruction struct {
 	GenMnemonic func(uint16) string
 	Size        byte
 	Execute     func(*ICMCProcessor) error
 }
 
+// The map of all instructions in the ICMC architecture.
+// To add a new instruction, just add an entry here (and in the Opcode consts)
+// and create the two function hooks.
+// The ALU instructions are complicated because they use functional programming
+// and reuse some ALU properties, such as flag register settings.
 var AllInstructions = map[Opcode]Instruction{
-	OpNOP: {func(uint16) string { return "nop" }, 1,
-		func(*ICMCProcessor) error { return nil }},
 	OpADD: {genALUM(true, "add"), 1,
-		execALU(true, func(a, b uint32) uint32 { return a + b })},
+		execALU(true, func(a, b uint32) uint32 { return a + b }),
+	},
 	OpSUB: {genALUM(true, "sub"), 1,
-		execALU(true, func(a, b uint32) uint32 { return a - b })},
+		execALU(true, func(a, b uint32) uint32 { return a - b }),
+	},
 	OpMULT: {genALUM(true, "mult"), 1,
-		execALU(true, func(a, b uint32) uint32 { return a * b })},
-	OpDIV: {genALUM(true, "div"), 1, execDIV},
+		execALU(true, func(a, b uint32) uint32 { return a * b }),
+	},
 	OpMOD: {genALUM(false, "mod"), 1,
-		execALU(false, func(a, b uint32) uint32 { return a % b })},
+		execALU(false, func(a, b uint32) uint32 { return a % b }),
+	},
 	OpAND: {genALUM(false, "and"), 1,
-		execALU(false, func(a, b uint32) uint32 { return a & b })},
+		execALU(false, func(a, b uint32) uint32 { return a & b }),
+	},
 	OpOR: {genALUM(false, "or"), 1,
-		execALU(false, func(a, b uint32) uint32 { return a | b })},
+		execALU(false, func(a, b uint32) uint32 { return a | b }),
+	},
 	OpXOR: {genALUM(false, "xor"), 1,
-		execALU(false, func(a, b uint32) uint32 { return a ^ b })},
-	OpNOT:     {gen2RegM("not"), 1, execNOT},
+		execALU(false, func(a, b uint32) uint32 { return a ^ b }),
+	},
+	OpDIV:     {genALUM(true, "div"), 1, execDIV},
+	OpNOT:     {genRegM("not", 2), 1, execNOT},
+	OpCMP:     {genRegM("cmp", 2), 1, execCMP},
+	OpLOADI:   {genRegM("loadi", 2), 1, execLOADI},
+	OpSTOREI:  {genRegM("storei", 2), 1, execSTOREI},
+	OpOUTCHAR: {genRegM("outchar", 2), 1, execOUTCHAR},
+	OpPUSH:    {genRegM("push", 1), 1, execPUSH},
+	OpPOP:     {genRegM("pop", 1), 1, execPOP},
+	OpLOADN:   {genRegM("loadn", 1), 2, execLOADN},
+	OpLOAD:    {genRegM("load", 1), 2, execLOAD},
+	OpSTORE:   {genRegM("store", 1), 2, execSTORE},
+	OpINCHAR:  {genRegM("inchar", 1), 1, execINCHAR},
+	OpRTS:     {genRegM("rts", 0), 1, execRTS},
+	OpNOP:     {genRegM("nop", 0), 1, execNOP},
+	OpHALT:    {genRegM("halt", 0), 1, execNOP},
+	OpBREAKP:  {genRegM("breakp", 0), 1, execNOP},
+	OpCSCARRY: {genCSCARRYM, 1, execCSCARRY},
 	OpINCDEC:  {genINCDECM, 1, execINCDEC},
-	OpCMP:     {gen2RegM("cmp"), 1, execCMP},
 	OpROTSH:   {genROTSHM, 1, execROTSH},
 	OpMOV:     {genMOVM, 1, execMOV},
-	OpPUSH:    {gen1RegM("push"), 1, execPUSH},
-	OpPOP:     {gen1RegM("pop"), 1, execPOP},
-	OpLOADN:   {gen1RegM("loadn"), 2, execLOADN},
-	OpLOAD:    {gen1RegM("load"), 2, execLOAD},
-	OpSTORE:   {gen1RegM("store"), 2, execSTORE},
-	OpLOADI:   {gen2RegM("loadi"), 1, execLOADI},
-	OpSTOREI:  {gen2RegM("storei"), 1, execSTOREI},
-	OpRTS:     {func(uint16) string { return "rts" }, 1, execRTS},
 	OpJMP:     {genJMPM, 2, execJMP},
 	OpCALL:    {genCALLM, 2, execCALL},
-	OpINCHAR:  {gen1RegM("inchar"), 1, execINCHAR},
-	OpOUTCHAR: {gen2RegM("outchar"), 1, execOUTCHAR},
-	OpHALT: {func(uint16) string { return "halt" }, 1,
-		func(*ICMCProcessor) error { return nil }},
-	OpBREAKP: {func(uint16) string { return "breakp" }, 1,
-		func(*ICMCProcessor) error { return nil }},
-	OpCSCARRY: {genCSCARRYM, 1, execCSCARRY},
 }
 
+// toRegStr gets the name of a register based on it's index.
 func toRegStr(value uint16) string {
 	return "R" + string(byte(value)+'0')
 }
 
-func getRegsStr(inst uint16, startBits []int) string {
+// getRegsStr gets, based on a 16 bit instruction and the number of register
+// operands, an asm-like string with the register names used.
+func getRegsStr(inst uint16, numRegs int) string {
+	if numRegs == 0 {
+		return ""
+	} else if numRegs > 3 {
+		panic(fmt.Sprint("invalid register number in getRegsStr: ", numRegs))
+	}
+
 	ret := ""
-	for _, sb := range startBits {
-		ret += toRegStr(getRegAt(inst, sb)) + ", "
+
+	bit := 7
+	for i := 0; i < numRegs; i++ {
+		ret += toRegStr(getRegAt(inst, bit)) + ", "
+		bit -= 3
 	}
 
 	ret = ret[:len(ret)-2]
 	return ret
 }
 
-func gen1RegM(m string) func(uint16) string {
+// genRegM generates a function that, given a 16 bit instruction, returns an
+// asm-like dissasembly of that instruction. This must be done in runtime
+// because there are instructions that change mnemonic based on bits different
+// than their opcode
+func genRegM(m string, numRegs int) func(uint16) string {
 	return func(d uint16) string {
-		mnemonic := m
-
-		mnemonic += " " + getRegsStr(d, []int{7})
-
-		return mnemonic
+		return m + " " + getRegsStr(d, numRegs)
 	}
 }
 
-func gen2RegM(m string) func(uint16) string {
-	return func(d uint16) string {
-		mnemonic := m
-
-		mnemonic += " " + getRegsStr(d, []int{7, 4})
-
-		return mnemonic
-	}
-}
-
+// getRegAt gets the register index in an instruction, considering that the
+// register describing part of the instruction starts at bit.
 func getRegAt(inst uint16, bit int) uint16 {
 	return (inst & (0b111 << bit)) >> bit
 }
