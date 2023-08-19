@@ -75,23 +75,22 @@ func (pr *ICMCProcessor) RunInstruction() error {
 // RunUntilHalt runs every instruction until a halt is found or an error occurs.
 // If an error happens the program counter is still incremented, but if a halt
 // is read it will stop right before the increment.
-func (pr *ICMCProcessor) RunUntilHalt() error {
+func (pr *ICMCProcessor) RunUntilHalt() (err error) {
 	pr.IsRunning = true
-	for {
+
+	for pr.IsRunning {
 		op := Opcode(pr.Data[pr.PC] >> 10)
 		if op == OpHALT {
 			pr.IsRunning = false
-			return nil
 		}
-		if err := pr.RunInstruction(); err != nil {
+		if err = pr.RunInstruction(); err != nil {
 			pr.IsRunning = false
-			return err
 		}
 		if op == OpBREAKP {
 			pr.IsRunning = false
-			return nil
 		}
 	}
+	return err
 }
 
 // Reset returns all registers to their initial state, and cleans the data

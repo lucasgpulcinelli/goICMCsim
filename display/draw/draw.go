@@ -2,109 +2,78 @@ package draw
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 )
 
-var (
-	screen     [30][40]canvasPixel // the processor virtual screen of characters
-	charMIF    [128][8]byte        // the binary representation of characters: an 8x8 bitfield for each ascii character
-	viewport   *canvas.Raster      // the viewport to display the pixels from the screen
-	icmcColors = []color.RGBA{
-		{0xff, 0xff, 0xff, 0},
-		{0xa5, 0x2a, 0x2a, 0},
-		{0x00, 0xff, 0x00, 0},
-		{0x6b, 0x8e, 0x23, 0},
-		{0x23, 0x23, 0x8e, 0},
-		{0x87, 0x1f, 0x78, 0},
-		{0x00, 0x80, 0x80, 0},
-		{0xe6, 0xe8, 0xfa, 0},
-		{0xbe, 0xbe, 0xbe, 0},
-		{0xff, 0x00, 0x00, 0},
-		{0x32, 0xcd, 0x32, 0},
-		{0xff, 0xff, 0x00, 0},
-		{0x00, 0x00, 0xff, 0},
-		{0xff, 0x1c, 0xae, 0},
-		{0x7a, 0xdb, 0x93, 0},
-		{0x20, 0x20, 0x20, 0},
-		{0x00, 0x00, 0x00, 0},
-	} // all the colors defined by the ICMC architecture
+const (
+	sw  = 40 // screen width
+	sh  = 30 // screen height
+	sup = 3  // screen upscale (to make the image less blurry)
+	chs = 8  // character pixel size, both horizontal and vertical
 )
 
-// canvasPixel represents a single pixel for the virtual character screen for
-// the processor.
-type canvasPixel struct {
-	col  color.Color
-	char byte
-}
-
-// drawPixel paints a single pixel at an x and y positions of a screen of size
-// w and h. It returns the color that the pixel at that position should be.
-//
-// Important: the underlying color struct must be the same across all pixels,
-// if it isn't fyne might make wrong assumptions about the pixel color data
-// type.
-func drawPixel(x, y, w, h int) color.Color {
-	// if the screen is not in the correct aspect ratio (40x30),
-	// resize for our calculations.
-	if h*40 < w*30 {
-		w = h / 30 * 40
-	} else {
-		h = w / 40 * 30
-	}
-
-	// resize the x and y values for the nearest character pixel index possible
-	// (where 0 is the first pixel of the first character,
-	// 1 is the second pixel of the first character,
-	// 8 is the first pixel of the second character, and so on)
-	roundy := y / (h / (30 * 8))
-	roundx := x / (w / (40 * 8))
-
-	if roundy/8 >= 30 || roundx/8 >= 40 {
-		// if we went past the boundaries of the virtual screen,
-		// draw a transparent non background.
-		return color.RGBA{0, 0, 0, 0}
-	}
-
-	// get the character drawn at that position
-	pixel := screen[roundy/8][roundx/8]
-
-	// see if the pixel should be colored or not as defined by the MIF char
-	// mapping, meaning: get the byte/scanline for that character based on roundy
-	// and if the bit at a position based on roundx is set,
-	// draw it in the color speficied.
-	bit := charMIF[pixel.char][roundy%8] & (1 << (7 - (roundx % 8)))
-	if bit != 0 {
-		return pixel.col
-	}
-
-	// otherwise, use the background default black color.
-	return color.RGBA{0, 0, 0, 0xff}
-}
+var (
+	charactersDrawn [sh][sw]uint16  // the characters previously drawn. Used when changing charmaps during runtime
+	screen          *image.Paletted // the actual image with the simulator output characters
+	charMIF         [128][8]byte    // the binary representation of characters: an 8x8 bitfield for each ascii character
+	viewport        *canvas.Image   // the fyne component to display screen
+	icmcColors      = []color.Color{
+		color.RGBA{0xff, 0xff, 0xff, 0xff},
+		color.RGBA{0xa5, 0x2a, 0x2a, 0xff},
+		color.RGBA{0x00, 0xff, 0x00, 0xff},
+		color.RGBA{0x6b, 0x8e, 0x23, 0xff},
+		color.RGBA{0x23, 0x23, 0x8e, 0xff},
+		color.RGBA{0x87, 0x1f, 0x78, 0xff},
+		color.RGBA{0x00, 0x80, 0x80, 0xff},
+		color.RGBA{0xe6, 0xe8, 0xfa, 0xff},
+		color.RGBA{0xbe, 0xbe, 0xbe, 0xff},
+		color.RGBA{0xff, 0x00, 0x00, 0xff},
+		color.RGBA{0x32, 0xcd, 0x32, 0xff},
+		color.RGBA{0xff, 0xff, 0x00, 0xff},
+		color.RGBA{0x00, 0x00, 0xff, 0xff},
+		color.RGBA{0xff, 0x1c, 0xae, 0xff},
+		color.RGBA{0x7a, 0xdb, 0x93, 0xff},
+		color.RGBA{0x20, 0x20, 0x20, 0xff},
+		color.RGBA{0x00, 0x00, 0x00, 0xff},
+	} // all the colors defined by the ICMC architecture
+)
 
 // Reset resets the viewport and makes all characters in the virtual screen be
 // '\0'.
 func Reset() {
-	for i := range screen {
-		for j := range screen[i] {
-			screen[i][j] = canvasPixel{color.RGBA{0, 0, 0, 0xff}, byte(0)}
+	for i := 0; i < sh; i++ {
+		for j := 0; j < sw; j++ {
+			charactersDrawn[i][j] = 16 << 8
+		}
+	}
+	RedrawScreen()
+}
+
+func RedrawScreen() {
+	for i := 0; i < sh; i++ {
+		for j := 0; j < sw; j++ {
+			updateChar(j, i, charactersDrawn[i][j])
 		}
 	}
 	viewport.Refresh()
 }
 
-// Refresh refreshes the viewport, drawing the whole viewport again based on
-// (hopefully changed) data at the virtual screen.
-func Refresh() {
-	viewport.Refresh()
-}
-
 // MakeViewPort creates a new viewport for the simulator.
-func MakeViewPort() *canvas.Raster {
-	viewport = canvas.NewRasterWithPixels(drawPixel)
-	viewport.SetMinSize(fyne.NewSize(40*8*2, 30*8*2))
+func MakeViewPort() *canvas.Image {
+	screen = image.NewPaletted(
+		image.Rect(0, 0, sw*chs*sup, sh*chs*sup), icmcColors,
+	)
+
+	viewport = canvas.NewImageFromImage(screen)
+	viewport.FillMode = canvas.ImageFillContain
+	viewport.ScaleMode = canvas.ImageScaleFastest
+
+	viewport.SetMinSize(fyne.NewSize(sw*10, sh*10))
+
 	Reset()
 	return viewport
 }
@@ -126,30 +95,50 @@ func SetCharData(data []byte) error {
 	return nil
 }
 
-// toICMCColor gets, based on the high byte of a character to be drawn, it's
-// color in RGB. This is a convention based loosely on DOS colors, defined
-// previously by the designers of the ICMC architecture.
-func toICMCColor(colbyte byte) color.Color {
-	if colbyte > 16 {
-		return color.RGBA{0, 0, 0, 0}
+// updateChar sets the character at position x, y (where x <= 40, y <= 30)
+// using the char MIF mapping to c, where the color is at it's higher byte.
+func updateChar(x, y int, c uint16) {
+	for i := 0; i < chs; i++ {
+		scanline := charMIF[uint8(c)][i]
+		for j := 0; j < chs; j++ {
+
+			bit := scanline & (1 << (7 - j))
+
+			colorId := uint8(16)
+			if bit != 0 {
+				colorId = uint8(c >> 8)
+			}
+
+			for k := 0; k < sup*sup; k++ {
+				// the actual pixel positions:
+				// x and y have character granularity, so each increase goes past
+				// chs*sup pixels;
+				// i and j have virtual pixel granularity, so each increase goes past
+				// sup pixels;
+				// k has actual pixel granularity for both axis
+
+				px := (x*chs+j)*sup + k/sup
+				py := (y*chs+i)*sup + k%sup
+				screen.SetColorIndex(px, py, colorId)
+			}
+		}
 	}
-	return icmcColors[colbyte]
 }
 
 // FyneOutChar implements the outchar instruction for the simulator:
 // bounds check the position and character being drawn, and write them to the
-// virtual screen buffer with the right color.
+// virtual screen.
 func FyneOutChar(c, pos uint16) error {
-	if pos >= 40*30 {
+	if pos >= sh*sw {
 		return fmt.Errorf("invalid position to draw on")
 	}
 	if byte(c) > 127 || byte(c>>8) > 16 {
 		return fmt.Errorf("invalid character to print")
 	}
 
-	screen[pos/40][pos%40].char = byte(c)
-	screen[pos/40][pos%40].col = toICMCColor(byte(c >> 8))
+	updateChar(int(pos%sw), int(pos/sw), c)
+	charactersDrawn[pos/sw][pos%sw] = c
 
-	Refresh()
+	viewport.Refresh()
 	return nil
 }

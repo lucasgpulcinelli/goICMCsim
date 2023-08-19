@@ -14,7 +14,6 @@ import (
 // instruction to the current instruction de PC is pointing to
 func updateAllDisplay() {
 	instructionList.Refresh()
-	draw.Refresh()
 	for i, widget := range registers {
 		var v uint16
 		switch i {
@@ -57,6 +56,7 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 		return
 	}
 
+	icmcSimulator.IsRunning = false
 	simulatorMutex.Lock()
 
 	// read the data in 16 bit words into the ICMC simulator code
@@ -74,7 +74,10 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 }
 
 // fyneReadMIFChar reads the character mapping definition from a MIF file and
-// loads it into the simulator.
+// loads it into the simulator. The mapping can be changed while the simulator
+// is running, in that case, only the next drawn characters will have the new
+// char mapping, the ones that have already been drawn will stay the way they
+// were.
 func fyneReadMIFChar(f io.ReadCloser, err error) {
 	if err != nil {
 		log.Println(err.Error())
@@ -94,16 +97,15 @@ func fyneReadMIFChar(f io.ReadCloser, err error) {
 
 	// set the charmap to draw with
 	draw.SetCharData(p.GetData())
-
-	// and update the display: the charmap can be changed while the simulator is
-	// running!
-	updateAllDisplay()
+	draw.RedrawScreen()
 	f.Close()
 }
 
 // restartCode resets the whole simulator to their default state,
 // the same when first initialized.
 func restartCode() {
+	icmcSimulator.IsRunning = false
+
 	simulatorMutex.Lock()
 	icmcSimulator.Reset()
 	simulatorMutex.Unlock()
@@ -119,9 +121,21 @@ func runUntilHalt() {
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
 	go func() {
+		if icmcSimulator.IsRunning {
+			return
+		}
+
+		for i := 0; i < 10; i++ {
+			registers[i].Disable()
+		}
+
 		simulatorMutex.Lock()
 		err := icmcSimulator.RunUntilHalt()
 		simulatorMutex.Unlock()
+
+		for i := 0; i < 10; i++ {
+			registers[i].Enable()
+		}
 
 		updateAllDisplay()
 		if err != nil {
@@ -133,6 +147,10 @@ func runUntilHalt() {
 
 // runOneInst runs the instruction at the PC and increments it.
 func runOneInst() {
+	if icmcSimulator.IsRunning {
+		return
+	}
+
 	simulatorMutex.Lock()
 	err := icmcSimulator.RunInstruction()
 	simulatorMutex.Unlock()
@@ -145,6 +163,5 @@ func runOneInst() {
 
 // shortcutsHelp creates small help window to show shortcuts and what they do.
 func shortcutsHelp() {
-	updateAllDisplay()
 	log.Println("not implemented")
 }

@@ -84,6 +84,10 @@ func makeRegisters() fyne.CanvasObject {
 				return
 			}
 
+			if icmcSimulator.IsRunning {
+				return
+			}
+
 			simulatorMutex.Lock()
 			switch i {
 			case 8:
