@@ -152,7 +152,7 @@ func runOneInst() {
 	}
 
 	simulatorMutex.Lock()
-	err := icmcSimulator.RunInstruction()
+	_, err := icmcSimulator.RunInstruction()
 	simulatorMutex.Unlock()
 
 	updateAllDisplay()

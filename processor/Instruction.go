@@ -40,60 +40,63 @@ const (
 // Instruction describes all data a single instruction needs to be fully
 // described for execution and display.
 type Instruction struct {
+	Op          Opcode
 	GenMnemonic func(uint16) string
 	Size        byte
 	Execute     func(*ICMCProcessor) error
 }
 
-// The map of all instructions in the ICMC architecture.
+// The vector of all instructions in the ICMC architecture.
 // To add a new instruction, just add an entry here (and in the Opcode consts)
 // and create the two function hooks.
 // The ALU instructions are complicated because they use functional programming
 // and reuse some ALU properties, such as flag register settings.
-var AllInstructions = map[Opcode]Instruction{
-	OpADD: {genALUM(true, "add"), 1,
+// The order here is important! The most executed instructions must appear
+// first for faster instruction fetching
+var AllInstructions = []Instruction{
+	{OpJMP, genJMPM, 2, execJMP},
+	{OpINCDEC, genINCDECM, 1, execINCDEC},
+	{OpINCHAR, genRegM("inchar", 1), 1, execINCHAR},
+	{OpCMP, genRegM("cmp", 2), 1, execCMP},
+	{OpADD, genALUM(true, "add"), 1,
 		execALU(true, func(a, b uint32) uint32 { return a + b }),
 	},
-	OpSUB: {genALUM(true, "sub"), 1,
+	{OpSUB, genALUM(true, "sub"), 1,
 		execALU(true, func(a, b uint32) uint32 { return a - b }),
 	},
-	OpMULT: {genALUM(true, "mult"), 1,
+	{OpMULT, genALUM(true, "mult"), 1,
 		execALU(true, func(a, b uint32) uint32 { return a * b }),
 	},
-	OpMOD: {genALUM(false, "mod"), 1,
+	{OpMOD, genALUM(false, "mod"), 1,
 		execALU(false, func(a, b uint32) uint32 { return a % b }),
 	},
-	OpAND: {genALUM(false, "and"), 1,
+	{OpCALL, genCALLM, 2, execCALL},
+	{OpOUTCHAR, genRegM("outchar", 2), 1, execOUTCHAR},
+	{OpAND, genALUM(false, "and"), 1,
 		execALU(false, func(a, b uint32) uint32 { return a & b }),
 	},
-	OpOR: {genALUM(false, "or"), 1,
+	{OpOR, genALUM(false, "or"), 1,
 		execALU(false, func(a, b uint32) uint32 { return a | b }),
 	},
-	OpXOR: {genALUM(false, "xor"), 1,
+	{OpXOR, genALUM(false, "xor"), 1,
 		execALU(false, func(a, b uint32) uint32 { return a ^ b }),
 	},
-	OpDIV:     {genALUM(true, "div"), 1, execDIV},
-	OpNOT:     {genRegM("not", 2), 1, execNOT},
-	OpCMP:     {genRegM("cmp", 2), 1, execCMP},
-	OpLOADI:   {genRegM("loadi", 2), 1, execLOADI},
-	OpSTOREI:  {genRegM("storei", 2), 1, execSTOREI},
-	OpOUTCHAR: {genRegM("outchar", 2), 1, execOUTCHAR},
-	OpPUSH:    {genRegM("push", 1), 1, execPUSH},
-	OpPOP:     {genRegM("pop", 1), 1, execPOP},
-	OpLOADN:   {genRegM("loadn", 1), 2, execLOADN},
-	OpLOAD:    {genRegM("load", 1), 2, execLOAD},
-	OpSTORE:   {genRegM("store", 1), 2, execSTORE},
-	OpINCHAR:  {genRegM("inchar", 1), 1, execINCHAR},
-	OpRTS:     {genRegM("rts", 0), 1, execRTS},
-	OpNOP:     {genRegM("nop", 0), 1, execNOP},
-	OpHALT:    {genRegM("halt", 0), 1, execNOP},
-	OpBREAKP:  {genRegM("breakp", 0), 1, execNOP},
-	OpCSCARRY: {genCSCARRYM, 1, execCSCARRY},
-	OpINCDEC:  {genINCDECM, 1, execINCDEC},
-	OpROTSH:   {genROTSHM, 1, execROTSH},
-	OpMOV:     {genMOVM, 1, execMOV},
-	OpJMP:     {genJMPM, 2, execJMP},
-	OpCALL:    {genCALLM, 2, execCALL},
+	{OpDIV, genALUM(true, "div"), 1, execDIV},
+	{OpNOT, genRegM("not", 2), 1, execNOT},
+	{OpLOADI, genRegM("loadi", 2), 1, execLOADI},
+	{OpSTOREI, genRegM("storei", 2), 1, execSTOREI},
+	{OpPUSH, genRegM("push", 1), 1, execPUSH},
+	{OpPOP, genRegM("pop", 1), 1, execPOP},
+	{OpLOADN, genRegM("loadn", 1), 2, execLOADN},
+	{OpLOAD, genRegM("load", 1), 2, execLOAD},
+	{OpSTORE, genRegM("store", 1), 2, execSTORE},
+	{OpRTS, genRegM("rts", 0), 1, execRTS},
+	{OpNOP, genRegM("nop", 0), 1, execNOP},
+	{OpHALT, genRegM("halt", 0), 1, execNOP},
+	{OpBREAKP, genRegM("breakp", 0), 1, execNOP},
+	{OpCSCARRY, genCSCARRYM, 1, execCSCARRY},
+	{OpROTSH, genROTSHM, 1, execROTSH},
+	{OpMOV, genMOVM, 1, execMOV},
 }
 
 // toRegStr gets the name of a register based on it's index.

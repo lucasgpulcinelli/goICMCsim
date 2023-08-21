@@ -28,15 +28,15 @@ func genCALLM(inst uint16) string {
 func execCMP(pr *ICMCProcessor) error {
 	inst := pr.Data[pr.PC]
 
-  // get register indicies
+	// get register indicies
 	RS1 := getRegAt(inst, 7)
 	RS2 := getRegAt(inst, 4)
 
-  // get the data at those registers
+	// get the data at those registers
 	RS1data := pr.GPRRegs[RS1]
 	RS2data := pr.GPRRegs[RS2]
 
-  // and update FR based on them
+	// and update FR based on them
 	if RS1data > RS2data {
 		pr.fr |= greater
 		pr.fr &= ^lesser
@@ -55,20 +55,20 @@ func execCMP(pr *ICMCProcessor) error {
 }
 
 func execRTS(pr *ICMCProcessor) error {
-  // if the stack is empty, we cannot return anywhere!
+	// if the stack is empty, we cannot return anywhere!
 	if pr.SP >= ((1 << 15) - 1) {
 		return fmt.Errorf("invalid stack pointer value")
 	}
 
-  // get the PC we (hopefully) stored before at a call
+	// get the PC we (hopefully) stored before at a call
 	pr.PC = pr.Data[pr.SP+1] - 1
 
-  // and increment the stack pointer to return it to the original position
+	// and increment the stack pointer to return it to the original position
 	pr.SP++
 	return nil
 }
 
-// shouldExecute returns if a branching instruction should or not actually 
+// shouldExecute returns if a branching instruction should or not actually
 // branch based on the flag register status.
 func shouldExecute(fr flagRegisterState, subOpcode uint16) (bool, error) {
 	switch subOpcode {
@@ -121,8 +121,8 @@ func execJMP(pr *ICMCProcessor) error {
 		return fmt.Errorf("jump at the end of data section")
 	}
 
-  // actually jump: set the PC to our immediate argument... -2 because at the 
-  // end of RunInstruction we still increment PC.
+	// actually jump: set the PC to our immediate argument... -2 because at the
+	// end of RunInstruction we still increment PC.
 	pr.PC = pr.Data[pr.PC+1] - 2
 	return nil
 }
@@ -145,14 +145,14 @@ func execCALL(pr *ICMCProcessor) error {
 		return fmt.Errorf("invalid stack pointer value")
 	}
 
-  // the return address is the next instruction in relation to us
+	// the return address is the next instruction in relation to us
 	pr.Data[pr.SP] = pr.PC + 2
 
-  // decrement the stack pointer, aka finalize a push PC+2
+	// decrement the stack pointer, aka finalize a push PC+2
 	pr.SP--
 
-  // actually call: set the PC to our immediate argument... -2 because at the 
-  // end of RunInstruction we still increment PC.
+	// actually call: set the PC to our immediate argument... -2 because at the
+	// end of RunInstruction we still increment PC.
 	pr.PC = pr.Data[pr.PC+1] - 2
 	return nil
 }

@@ -155,8 +155,8 @@ func execROTSH(pr *ICMCProcessor) error {
 	// operand of bits to shift/rotate
 	n := inst & 0b1111
 
-  // TODO: this is kind of complicated bit shifting magic, it would be ideal to
-  // document all operations, even if they work okay and the result is obvious.
+	// TODO: this is kind of complicated bit shifting magic, it would be ideal to
+	// document all operations, even if they work okay and the result is obvious.
 	switch (inst & (0b111 << 4)) >> 4 {
 	case 0:
 		pr.GPRRegs[RD] = pr.GPRRegs[RD] << n
@@ -183,7 +183,7 @@ func execROTSH(pr *ICMCProcessor) error {
 func execMOV(pr *ICMCProcessor) error {
 	inst := pr.Data[pr.PC]
 
-  // special cases are needed to handle mov sp, rx or mov rx, sp
+	// special cases are needed to handle mov sp, rx or mov rx, sp
 	if inst&0b11 == 0b11 {
 		RS := getRegAt(inst, 7)
 		pr.SP = pr.GPRRegs[RS]

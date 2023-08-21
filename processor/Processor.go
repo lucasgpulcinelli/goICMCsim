@@ -47,46 +47,51 @@ func NewEmptyProcessor(inChar func() (uint8, error),
 	}
 }
 
+func fetchInstruction(op Opcode) (Instruction, bool) {
+	for _, inst := range AllInstructions {
+		if inst.Op == op {
+			return inst, true
+		}
+	}
+	return Instruction{}, false
+}
+
 // RunInstruction runs a single instruction, incrementing the program counter
-// unless the instruction is halt.
-func (pr *ICMCProcessor) RunInstruction() error {
+// unless the instruction is halt. It returns if the processor should still
+// run (true) or should stop immediatly (in the case of a halt or breakp).
+func (pr *ICMCProcessor) RunInstruction() (bool, error) {
 	if pr.PC >= ((1 << 15) - 1) {
-		return fmt.Errorf("PC at the end of data section")
+		return false, fmt.Errorf("PC at the end of data section")
 	}
 
 	currentOpcode := Opcode(pr.Data[pr.PC] >> 10)
 
 	if currentOpcode == OpHALT {
-		return nil
+		return false, nil
 	}
 
-	inst, ok := AllInstructions[currentOpcode]
+	inst, ok := fetchInstruction(currentOpcode)
 	if !ok {
 		pr.PC++ // skip this instruction in order not to loop on the same error
-		return fmt.Errorf("instruction does not exist")
+		return false, fmt.Errorf("instruction does not exist")
 	}
 
 	err := inst.Execute(pr)
 
 	pr.PC += uint16(inst.Size)
-	return err
+	return currentOpcode != OpBREAKP, err
 }
 
 // RunUntilHalt runs every instruction until a halt is found or an error occurs.
 // If an error happens the program counter is still incremented, but if a halt
 // is read it will stop right before the increment.
 func (pr *ICMCProcessor) RunUntilHalt() (err error) {
+	var remain bool
 	pr.IsRunning = true
 
 	for pr.IsRunning {
-		op := Opcode(pr.Data[pr.PC] >> 10)
-		if op == OpHALT {
-			pr.IsRunning = false
-		}
-		if err = pr.RunInstruction(); err != nil {
-			pr.IsRunning = false
-		}
-		if op == OpBREAKP {
+		remain, err = pr.RunInstruction()
+		if !remain || err != nil {
 			pr.IsRunning = false
 		}
 	}
@@ -119,7 +124,7 @@ func (pr *ICMCProcessor) GetMnemonic(loc int) string {
 	if pr.isOperand(loc) {
 		return fmt.Sprintf("#%d", instData)
 	} else {
-		inst, ok := AllInstructions[Opcode(instData>>10)]
+		inst, ok := fetchInstruction(Opcode(instData >> 10))
 		if !ok {
 			return fmt.Sprintf("<invalid opcode %d>", instData>>10)
 		}
@@ -138,7 +143,7 @@ func (pr *ICMCProcessor) isOperand(loc int) bool {
 	}
 
 	instPrevData := pr.Data[loc-1]
-	instPrev, ok := AllInstructions[Opcode(instPrevData>>10)]
+	instPrev, ok := fetchInstruction(Opcode(instPrevData >> 10))
 	if !ok {
 		// if the instruction before does not exist, it is certainly not 32 bits
 		return false
