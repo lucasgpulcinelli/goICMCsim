@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"sync/atomic"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -12,7 +14,6 @@ import (
 const (
 	sw  = 40 // screen width
 	sh  = 30 // screen height
-	sup = 3  // screen upscale (to make the image less blurry)
 	chs = 8  // character pixel size, both horizontal and vertical
 )
 
@@ -21,6 +22,7 @@ var (
 	screen          *image.Paletted // the actual image with the simulator output characters
 	charMIF         [128][8]byte    // the binary representation of characters: an 8x8 bitfield for each ascii character
 	viewport        *canvas.Image   // the fyne component to display screen
+	shoudDraw       atomic.Uint32
 	icmcColors      = []color.Color{
 		color.RGBA{0xff, 0xff, 0xff, 0xff},
 		color.RGBA{0xa5, 0x2a, 0x2a, 0xff},
@@ -50,7 +52,6 @@ func Reset() {
 			charactersDrawn[i][j] = 16 << 8
 		}
 	}
-	RedrawScreen()
 }
 
 func RedrawScreen() {
@@ -65,14 +66,23 @@ func RedrawScreen() {
 // MakeViewPort creates a new viewport for the simulator.
 func MakeViewPort() *canvas.Image {
 	screen = image.NewPaletted(
-		image.Rect(0, 0, sw*chs*sup, sh*chs*sup), icmcColors,
+		image.Rect(0, 0, sw*chs, sh*chs), icmcColors,
 	)
 
 	viewport = canvas.NewImageFromImage(screen)
 	viewport.FillMode = canvas.ImageFillContain
-	viewport.ScaleMode = canvas.ImageScaleFastest
+	viewport.ScaleMode = canvas.ImageScalePixels
 
 	viewport.SetMinSize(fyne.NewSize(sw*10, sh*10))
+
+	go func() {
+		for {
+			if shoudDraw.Swap(0) != 0 {
+				RedrawScreen()
+			}
+			time.Sleep(17 * time.Millisecond)
+		}
+	}()
 
 	Reset()
 	return viewport
@@ -95,7 +105,7 @@ func SetCharData(data []byte) error {
 	return nil
 }
 
-// updateChar sets the character at position x, y (where x <= 40, y <= 30)
+// UpdateChar sets the character at position x, y (where x <= 40, y <= 30)
 // using the char MIF mapping to c, where the color is at it's higher byte.
 func updateChar(x, y int, c uint16) {
 	for i := 0; i < chs; i++ {
@@ -109,18 +119,14 @@ func updateChar(x, y int, c uint16) {
 				colorId = uint8(c >> 8)
 			}
 
-			for k := 0; k < sup*sup; k++ {
-				// the actual pixel positions:
-				// x and y have character granularity, so each increase goes past
-				// chs*sup pixels;
-				// i and j have virtual pixel granularity, so each increase goes past
-				// sup pixels;
-				// k has actual pixel granularity for both axis
+			// the actual pixel positions:
+			// x and y have character granularity, so each increase goes past
+			// chs pixels;
+			// i and j have virtual pixel granularity
 
-				px := (x*chs+j)*sup + k/sup
-				py := (y*chs+i)*sup + k%sup
-				screen.SetColorIndex(px, py, colorId)
-			}
+			px := x*chs + j
+			py := y*chs + i
+			screen.SetColorIndex(px, py, colorId)
 		}
 	}
 }
@@ -136,9 +142,8 @@ func FyneOutChar(c, pos uint16) error {
 		return fmt.Errorf("invalid character to print")
 	}
 
-	updateChar(int(pos%sw), int(pos/sw), c)
 	charactersDrawn[pos/sw][pos%sw] = c
+	shoudDraw.Add(1)
 
-	viewport.Refresh()
 	return nil
 }
