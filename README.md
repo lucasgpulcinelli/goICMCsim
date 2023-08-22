@@ -9,7 +9,13 @@ This program is a simulator for the ICMC architecture (defined [here](https://gi
 - Shortcuts that do not rely on keys that may not be present in a laptop keyboard (for instance insert, home and end keys);
 - Support for windows, macOS and linux;
 
-# How to Compile and Run the Program
+# Installation
+If you don't want to compile anything, go to the [releases page](https://github.com/lucasgpulcinelli/goICMCsim/releases) and download a precompiled binary for your system.
+
+# Usage
+The first thing you will want to do is add a program to run and test it. This can be done by either specifing MIF files in the ICMC architecture format in the command line or by using the file -\> open code/char MIF menu. Remember to always specify a char MIF, otherwise the code's outchars will always output blank characters!
+
+# How to Compile from the Source Code
 First, install a recent version of go (at least 1.13), either from your package manager or from [here](https://go.dev/doc/install). After that, you will also need git and a C compiler (MinGW is necessary on windows, and Xcode on macOS).
 
 On debian/ubuntu based systems, you will need to install `libgl1-mesa-dev xorg-dev`;
@@ -17,7 +23,7 @@ On fedora and red hat based systems, you will need to install `libX11-devel libX
 
 Then, Just use `go build .` to compile and `./goICMCsim` to start an empty processor. You can see the command line options with `--help`.
 
-If you don't want to clone the package and just want to compile and install it directly into $GOPATH/bin, just use `go install github.com/lucasgpulcinelli/goICMCsim@latest` (you will still need the tools listed before).
+If you don't want to clone the repository and just want to compile and install it directly into $GOPATH/bin, just use `go install github.com/lucasgpulcinelli/goICMCsim@latest` (you will still need the tools listed before).
 
 # How to add/modify instructions in the simulator
 First, you will need to choose an opcode for your instruction, then add it in the constants list at [processor/Instruction.go](processor/Instruction.go).
@@ -53,3 +59,13 @@ func execINCMOD(pr *ICMCProcessor) error {
     return nil
 }
 ```
+
+# What you can do to help the GO ICMC Simulator's development
+An open source project is never complete. Please help the project by submitting issues and pull requests! They will be happly accepted if they help the overall project. Some examples of what can be done:
+- Add a button to switch the instruction list from displaying dissasembled mnemonics and operands and start displaying raw data. This is essential to help programmers debug memory operations!
+- Add a configurable clock speed to simulate the speed of the original processor.
+- Fully complete the MIF syntax parsing in the MIF package and official quartus documentation.
+- Increase processor speed by changing processor.fetchInstruction, for now the instruction fetching based on opcodes is the main bottleneck for performace.
+- Add better error display (instead of relying on log.Println for unexpected errors)
+- Add a right click options menu for each instruction in the list to edit memory in place or add breakpoints. This is possible using a new type and go struct inheritance in the instructionList and some remodeling in processor.RunUntilHalt.
+- Documentation of instruction execution and mnemonic generation.
