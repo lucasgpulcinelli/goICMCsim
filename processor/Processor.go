@@ -47,6 +47,16 @@ func NewEmptyProcessor(inChar func() (uint8, error),
 	}
 }
 
+// fetchInstruction gets, based on an opcode and the AllInstructions list, the
+// instruction associated with the opocde. 
+// It returns false if the opcode does not exist.
+//
+// For now, fetchInstruction executes a linear search in the list. This is 
+// efficient in most cases because the most used instructions are at the 
+// start of the list.
+// 
+// TODO: maybe a binary search and some kind of instruction index switching 
+// mechanism would be much faster.
 func fetchInstruction(op Opcode) (Instruction, bool) {
 	for _, inst := range AllInstructions {
 		if inst.Op == op {
