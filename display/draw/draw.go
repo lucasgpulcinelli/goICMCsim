@@ -22,7 +22,7 @@ var (
 	screen          *image.Paletted // the actual image with the simulator output characters
 	charMIF         [128][8]byte    // the binary representation of characters: an 8x8 bitfield for each ascii character
 	viewport        *canvas.Image   // the fyne component to display screen
-	shoudDraw       atomic.Uint32   // an atomic variable to ease the draw thread but keep it from missing updates
+	shouldDraw       atomic.Value   // an atomic variable to ease the draw thread but keep it from missing updates
 	icmcColors      = []color.Color{
 		color.RGBA{0xff, 0xff, 0xff, 0xff},
 		color.RGBA{0xa5, 0x2a, 0x2a, 0xff},
@@ -83,7 +83,7 @@ func MakeViewPort() *canvas.Image {
 	// cases outchar is the bottleneck for the simulator.
 	go func() {
 		for {
-			if shoudDraw.Swap(0) != 0 {
+			if shouldDraw.Swap(0) != 0 {
 				RedrawScreen()
 			}
 			// runs at 60 fps
@@ -150,7 +150,7 @@ func FyneOutChar(c, pos uint16) error {
 	}
 
 	charactersDrawn[pos/sw][pos%sw] = c
-	shoudDraw.Add(1)
+	shouldDraw.Store(1)
 
 	return nil
 }

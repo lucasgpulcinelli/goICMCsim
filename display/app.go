@@ -19,15 +19,15 @@ var (
 	icmcSimulator  *processor.ICMCProcessor // the main simulator instance itself
 	simulatorMutex sync.Mutex               // the mutex to sync simulator actions
 
-	currentKey atomic.Uint32 // the current key pressed by the user in ascii
+	currentKey atomic.Value // the current key pressed by the user in ascii
 )
 
 // FyneInChar implements the inchar instruction for the simulator: just read
 // the current key pressed and null it out to make sure the key for a single
 // press is only read once by the processor.
 func FyneInChar() (uint8, error) {
-	ret := currentKey.Swap(255)
-	return uint8(ret), nil
+	ret := currentKey.Swap(uint8(255))
+	return ret.(uint8), nil
 }
 
 // setupInput creates hooks for when the user types keys while the simulator
@@ -39,13 +39,13 @@ func setupInput(w fyne.Window) {
 		if icmcSimulator.IsRunning {
 			switch ev.Name {
 			case fyne.KeyReturn:
-				currentKey.Store('\r')
+				currentKey.Store(uint8('\r'))
 			}
 		}
 	})
 	w.Canvas().SetOnTypedRune(func(r rune) {
 		if icmcSimulator.IsRunning {
-			currentKey.Store(uint32(r))
+			currentKey.Store(uint8(r))
 		}
 	})
 }
@@ -54,7 +54,7 @@ func setupInput(w fyne.Window) {
 // it takes as input the initial MIFs for code and character mapping.
 func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	// initializes the first key pressed with 255
-	currentKey.Store(255)
+	currentKey.Store(uint8(255))
 
 	// create a new processor with out input and output functions
 	icmcSimulator = processor.NewEmptyProcessor(FyneInChar, draw.FyneOutChar)
