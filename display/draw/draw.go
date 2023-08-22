@@ -52,6 +52,7 @@ func Reset() {
 			charactersDrawn[i][j] = 16 << 8
 		}
 	}
+	RedrawScreen()
 }
 
 // RedrawScreen redraws the entire screen with new characters.

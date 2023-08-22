@@ -1,35 +1,12 @@
 package display
 
 import (
-	"fmt"
 	"io"
 	"log"
 
-	"fyne.io/fyne/v2/widget"
 	"github.com/lucasgpulcinelli/goICMCsim/MIF"
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
 )
-
-// updateAllDisplay refreshes the full window for the simulator and scrolls the
-// instruction to the current instruction de PC is pointing to
-func updateAllDisplay() {
-	instructionList.Refresh()
-	for i, widget := range registers {
-		var v uint16
-		switch i {
-		case 8:
-			v = icmcSimulator.SP
-		case 9:
-			v = icmcSimulator.PC
-		default:
-			v = icmcSimulator.GPRRegs[i]
-		}
-		widget.SetText(fmt.Sprintf("%d", v))
-	}
-
-	instructionList.Select(widget.ListItemID(icmcSimulator.PC))
-	instructionList.ScrollTo(widget.ListItemID(icmcSimulator.PC))
-}
 
 // fyneReadMIFCode reads the instructions from a code MIF file and loads them
 // into the simulator.
