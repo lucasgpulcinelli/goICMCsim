@@ -161,7 +161,12 @@ func runOneInst() {
 	}
 }
 
+// stopSim stops the simulation if one was running
+func stopSim() {
+	icmcSimulator.IsRunning = false
+}
+
 // shortcutsHelp creates small help window to show shortcuts and what they do.
 func shortcutsHelp() {
-	log.Println("not implemented")
+	helpPopUp.Show()
 }

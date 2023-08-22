@@ -19,11 +19,13 @@ import (
 )
 
 var (
-	icmcSimulator   *processor.ICMCProcessor       // the main simulator instance itself
-	simulatorMutex  sync.Mutex                     // the mutex to sync simulator actions
-	registers       [10]*widget.Entry              // the registers (plus SP and PC) widgets for editing
-	instructionList *widget.List                   // the instruction list widgets for editing
-	currentKey      uint8                    = 255 // the current key pressed by the user in ascii
+	icmcSimulator   *processor.ICMCProcessor // the main simulator instance itself
+	simulatorMutex  sync.Mutex               // the mutex to sync simulator actions
+	registers       [10]*widget.Entry        // the registers (plus SP and PC) widgets for editing
+	instructionList *widget.List             // the instruction list widgets for editing
+	helpPopUp       *widget.PopUp            // the popup that appears to show help
+
+	currentKey uint8 = 255 // the current key pressed by the user in ascii
 )
 
 // makeMainMenu adds in window the main menubar with all code actions
@@ -48,6 +50,7 @@ func makeMainMenu(w fyne.Window) {
 		fyne.NewMenuItem("reset", restartCode),
 		fyne.NewMenuItem("run until halt", runUntilHalt),
 		fyne.NewMenuItem("run one instruction", runOneInst),
+		fyne.NewMenuItem("stop simulation", stopSim),
 	)
 
 	// "help" menu toolbar
@@ -172,6 +175,19 @@ func setupInput(w fyne.Window) {
 	})
 }
 
+func makeHelpPopUp(w fyne.Window) {
+	help := widget.NewLabel(`
+  Ctrl+Tab runs a single instruction;
+  Ctrl+H runs instructions until a halt, breakp or error is found;
+  Ctrl+P stops execution of a simulation;
+  Ctrl+O resets the simulator.
+  `)
+	ok := widget.NewButton("ok", func() { helpPopUp.Hide() })
+	c := w.Canvas()
+
+	helpPopUp = widget.NewModalPopUp(container.NewBorder(nil, ok, nil, nil, help), c)
+}
+
 // StartSimulatorWindow creates and starts the execution of the ICMC simulator.
 // it takes as input the initial MIFs for code and character mapping.
 func StartSimulatorWindow(codem, charm io.ReadCloser) {
@@ -198,6 +214,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 
 	w.SetContent(content)
 	makeMainMenu(w)
+	makeHelpPopUp(w)
 
 	w.Resize(fyne.NewSize(900, 500))
 

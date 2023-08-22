@@ -33,7 +33,7 @@ func handleShortcuts(sh fyne.Shortcut) {
 	case shortReset:
 		restartCode()
 	case shortStop:
-		fmt.Println("not implemented")
+		stopSim()
 	default:
 		fmt.Println("invalid shortcut")
 	}
