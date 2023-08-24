@@ -16,7 +16,7 @@ If you don't want to compile anything, go to the [releases page](https://github.
 The first thing you will want to do is add a program to run and test it. This can be done by either specifing MIF files in the ICMC architecture format in the command line or by using the file -\> open code/char MIF menu. Remember to always specify a char MIF, otherwise the code's outchars will always output blank characters!
 
 # How to Compile from the Source Code
-First, install a recent version of go (at least 1.13), either from your package manager or from [here](https://go.dev/doc/install). After that, you will also need git and a C compiler (MinGW is necessary on windows, and Xcode on macOS).
+First, install a recent version of go (at least 1.13), either from your package manager or from [here](https://go.dev/doc/install). After that, you will also need git and a C compiler (on windows, you need to use MinGW).
 
 On debian/ubuntu based systems, you will need to install `libgl1-mesa-dev xorg-dev`;
 On fedora and red hat based systems, you will need to install `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel libXxf86vm-devel`;
@@ -69,3 +69,11 @@ An open source project is never complete. Please help the project by submitting 
 - Add better error display (instead of relying on log.Println for unexpected errors)
 - Add a right click options menu for each instruction in the list to edit memory in place or add breakpoints. This is possible using a new type and go struct inheritance in the instructionList and some remodeling in processor.RunUntilHalt.
 - Documentation of instruction execution and mnemonic generation.
+
+# Contributors
+The main contributors to the project are listes here:
+- Lucas Eduardo Gulka Pulcinelli ([github](https://github.com/lucasgpulcinelli))
+
+Special thanks to:
+- Artur Brenner Weber ([github](https://github.com/ArturWeber)), for providing macOS/arm64 builds and helping with documentation
+- Daniel Contente Romanzini ([github](https://github.com/Dauboau)), for providing macOS/amd64 builds
