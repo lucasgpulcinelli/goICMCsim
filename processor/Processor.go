@@ -2,6 +2,7 @@ package processor
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // flagRegisterState defines the possible flag register conditions
@@ -48,14 +49,14 @@ func NewEmptyProcessor(inChar func() (uint8, error),
 }
 
 // fetchInstruction gets, based on an opcode and the AllInstructions list, the
-// instruction associated with the opocde. 
+// instruction associated with the opocde.
 // It returns false if the opcode does not exist.
 //
-// For now, fetchInstruction executes a linear search in the list. This is 
-// efficient in most cases because the most used instructions are at the 
+// For now, fetchInstruction executes a linear search in the list. This is
+// efficient in most cases because the most used instructions are at the
 // start of the list.
-// 
-// TODO: maybe a binary search and some kind of instruction index switching 
+//
+// TODO: maybe a binary search and some kind of instruction index switching
 // mechanism would be much faster.
 func fetchInstruction(op Opcode) (Instruction, bool) {
 	for _, inst := range AllInstructions {
@@ -128,8 +129,13 @@ func (pr *ICMCProcessor) Reset() {
 // instructon, or if the opcode is invalid, the return value is the decimal
 // representation for an immediate; otherwise, the assembly representation is
 // returned.
-func (pr *ICMCProcessor) GetMnemonic(loc int) string {
+func (pr *ICMCProcessor) GetMnemonic(loc int, view int) string {
 	instData := pr.Data[loc]
+
+	if view == -1 {
+		return "#" + strconv.FormatUint(uint64(instData), 10)
+
+	}
 
 	if pr.isOperand(loc) {
 		return fmt.Sprintf("#%d", instData)
