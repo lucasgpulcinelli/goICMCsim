@@ -16,6 +16,8 @@ var (
 	helpPopUp       *widget.PopUp     // the popup that appears to show help
 )
 
+var viewMode int = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
+
 // makeMainMenu adds in window the main menubar with all code actions
 // associated. Most code actions are complex and defined in menuActions.go.
 func makeMainMenu(w fyne.Window) {
@@ -39,6 +41,7 @@ func makeMainMenu(w fyne.Window) {
 		fyne.NewMenuItem("run until halt", runUntilHalt),
 		fyne.NewMenuItem("run one instruction", runOneInst),
 		fyne.NewMenuItem("stop simulation", stopSim),
+		fyne.NewMenuItem("toggle instruction view", toggleInstView),
 	)
 
 	// "help" menu toolbar
@@ -123,8 +126,12 @@ func makeInstructionScroll() fyne.CanvasObject {
 			// get the mnemonic for that instruction, and display it besides it's
 			// location
 
-			mnemonic := icmcSimulator.GetMnemonic(i)
+			mnemonic := icmcSimulator.GetMnemonic(i, viewMode)
 			finalS := fmt.Sprintf("%.5d | %s", i, mnemonic)
+			// if (viewMode == -1) {
+			// 	finalS := fmt.Sprintf("%.5d | %d", i, )
+			// }
+			// instructionList.Refresh()
 			obj.(*widget.Label).SetText(finalS)
 		},
 	)
@@ -163,7 +170,9 @@ func updateAllDisplay() {
 		default:
 			v = icmcSimulator.GPRRegs[i]
 		}
-		reg.SetText(fmt.Sprintf("%d", v))
+
+		reg.SetText(fmt.Sprintf("%d", v)) // displays registers value on the left vertical table
+
 	}
 
 	instructionList.Select(widget.ListItemID(icmcSimulator.PC))
