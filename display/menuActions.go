@@ -2,7 +2,8 @@ package display
 
 import (
 	"io"
-	"log"
+	"errors"
+	"fmt"
 
 	"github.com/lucasgpulcinelli/goICMCsim/MIF"
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
@@ -10,27 +11,22 @@ import (
 
 // fyneReadMIFCode reads the instructions from a code MIF file and loads them
 // into the simulator.
-func fyneReadMIFCode(f io.ReadCloser, err error) {
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
+func fyneReadMIFCode(f io.ReadCloser) error {
+	var err error
+
 	if f == nil {
-		log.Println("reader is nil")
-		return
+		return errors.New("reader is nil")
 	}
 
 	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
-		log.Println(err.Error())
-		return
+		return err
 	}
 
 	data := p.GetData()
 	if len(data) != 1<<16 {
-		log.Printf("MIF is not the right size for code: %d\n", len(data))
-		return
+		return fmt.Errorf("mif is not the right size for code: %d", len(data))
 	}
 
 	icmcSimulator.IsRunning = false
@@ -48,6 +44,8 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 	draw.Reset()
 	restartCode()
 	f.Close()
+
+	return err
 }
 
 // fyneReadMIFChar reads the character mapping definition from a MIF file and
@@ -55,27 +53,30 @@ func fyneReadMIFCode(f io.ReadCloser, err error) {
 // is running, in that case, only the next drawn characters will have the new
 // char mapping, the ones that have already been drawn will stay the way they
 // were.
-func fyneReadMIFChar(f io.ReadCloser, err error) {
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
+func fyneReadMIFChar(f io.ReadCloser) error {
+	var err error
+
 	if f == nil {
-		log.Println("reader is nil")
-		return
+		return errors.New("reader is nil")
 	}
 
 	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
-		log.Println(err.Error())
-		return
+		return err
+	}
+
+	data := p.GetData()
+	if len(data) != 1<<16 {
+		return fmt.Errorf("mif is not the right size for code: %d", len(data))
 	}
 
 	// set the charmap to draw with
 	draw.SetCharData(p.GetData())
 	draw.RedrawScreen()
 	f.Close()
+
+	return err
 }
 
 // restartCode resets the whole simulator to their default state,
@@ -93,13 +94,17 @@ func restartCode() {
 
 // runUntilHalt runs the current instruction and the next ones until a halt is
 // found or the code crashes.
-func runUntilHalt() {
+func runUntilHalt() error {
 	// do everything in a separate goroutine, because fyne uses a display
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
+	
+	errCh := make(chan error) // chanel for capture error
+	
 	go func() {
 		if icmcSimulator.IsRunning {
-			return
+			errCh <- errors.New("a simulation is already running") 
+			return 
 		}
 
 		for i := 0; i < 10; i++ {
@@ -116,16 +121,18 @@ func runUntilHalt() {
 
 		updateAllDisplay()
 		if err != nil {
-			log.Println(err.Error())
+			errCh <- err
 			return
 		}
 	}()
+	var err error  = <-errCh
+	return err
 }
 
 // runOneInst runs the instruction at the PC and increments it.
-func runOneInst() {
+func runOneInst() error {
 	if icmcSimulator.IsRunning {
-		return
+		return errors.New("a simulation is already running") 
 	}
 
 	simulatorMutex.Lock()
@@ -133,9 +140,7 @@ func runOneInst() {
 	simulatorMutex.Unlock()
 
 	updateAllDisplay()
-	if err != nil {
-		log.Println(err.Error())
-	}
+	return err
 }
 
 // stopSim stops the simulation if one was running

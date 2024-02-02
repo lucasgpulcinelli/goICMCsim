@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
 	"github.com/lucasgpulcinelli/goICMCsim/processor"
@@ -85,10 +86,16 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 
 	// if the code or char mapping MIFs were defined, read them
 	if codem != nil {
-		fyneReadMIFCode(codem, nil)
+		var err error = fyneReadMIFCode(codem)
+		if err != nil {
+			dialog.ShowError(err, w)
+		}
 	}
 	if charm != nil {
-		fyneReadMIFChar(charm, nil)
+		var err error = fyneReadMIFChar(charm)
+		if err != nil {
+			dialog.ShowError(err, w)
+		}
 	}
 
 	// refresh the display initially to create a proprer instruction scroll and

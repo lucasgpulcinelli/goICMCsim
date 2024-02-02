@@ -1,8 +1,11 @@
 package display
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -16,16 +19,48 @@ var (
 	helpPopUp       *widget.PopUp     // the popup that appears to show help
 )
 
+// validateFileAndShowError checks if a file can be opened and if it's a .mif file.
+// If the file cannot be opened or is not a .mif file, it displays an error to the user.
+func validateFileAndShowError(f fyne.URIReadCloser, err error, w fyne.Window) {
+	if err != nil {
+		dialog.ShowError(err, w)
+		return
+	}
+
+	if f == nil {
+		dialog.ShowError(errors.New("could not open a file"), w)
+		return
+	}
+
+	// Checks if the file has the .mif extension
+	if strings.ToLower(filepath.Ext(f.URI().Path())) != ".mif" {
+		dialog.ShowError(errors.New("file is not a .mif file"), w)
+		return
+	}
+}
+
 // makeMainMenu adds in window the main menubar with all code actions
 // associated. Most code actions are complex and defined in menuActions.go.
 func makeMainMenu(w fyne.Window) {
 	// both file dialog window popup instance (creates a little window to choose
 	// a file for either a code or char MIF file)
 	openCodeDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) { fyneReadMIFCode(f, err) }, w)
+		func(f fyne.URIReadCloser, err error) {
+			validateFileAndShowError(f, err, w)
+			err = fyneReadMIFCode(f)
+			if err != nil {
+				dialog.ShowError(err, w)
+			}
+		}, w)
 
 	openCharDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) { fyneReadMIFChar(f, err) }, w)
+		func(f fyne.URIReadCloser, err error) {
+			validateFileAndShowError(f, err, w)
+			err = fyneReadMIFChar(f)
+			if err != nil {
+				dialog.ShowError(err, w)
+			}
+		}, w)
 
 	// "file" menu toolbar
 	file := fyne.NewMenu("file",
@@ -36,8 +71,18 @@ func makeMainMenu(w fyne.Window) {
 	// "options" menu toolbar
 	options := fyne.NewMenu("options",
 		fyne.NewMenuItem("reset", restartCode),
-		fyne.NewMenuItem("run until halt", runUntilHalt),
-		fyne.NewMenuItem("run one instruction", runOneInst),
+		fyne.NewMenuItem("run until halt", func() {
+			var err error = runUntilHalt()
+			if err != nil {
+				dialog.ShowError(err, w)
+			}
+		}),
+		fyne.NewMenuItem("run one instruction", func ()  {
+			var err error = runOneInst()
+			if err != nil {
+				dialog.ShowError(err, w)
+			}
+		}),
 		fyne.NewMenuItem("stop simulation", stopSim),
 	)
 
