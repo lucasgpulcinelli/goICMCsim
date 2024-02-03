@@ -11,12 +11,11 @@ import (
 )
 
 var (
-	registers       [10]*widget.Entry // the registers (plus SP and PC) widgets for editing
-	instructionList *widget.List      // the instruction list widgets for editing
-	helpPopUp       *widget.PopUp     // the popup that appears to show help
+	registers       [10]*widget.Entry     // the registers (plus SP and PC) widgets for editing
+	instructionList *widget.List          // the instruction list widgets for editing
+	helpPopUp       *widget.PopUp         // the popup that appears to show help
+	viewMode        int               = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
 )
-
-var viewMode int = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
 
 // makeMainMenu adds in window the main menubar with all code actions
 // associated. Most code actions are complex and defined in menuActions.go.
@@ -128,10 +127,7 @@ func makeInstructionScroll() fyne.CanvasObject {
 
 			mnemonic := icmcSimulator.GetMnemonic(i, viewMode)
 			finalS := fmt.Sprintf("%.5d | %s", i, mnemonic)
-			// if (viewMode == -1) {
-			// 	finalS := fmt.Sprintf("%.5d | %d", i, )
-			// }
-			// instructionList.Refresh()
+
 			obj.(*widget.Label).SetText(finalS)
 		},
 	)

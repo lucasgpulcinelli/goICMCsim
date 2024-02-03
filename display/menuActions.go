@@ -1,7 +1,6 @@
 package display
 
 import (
-	"fmt"
 	"io"
 	"log"
 
@@ -151,8 +150,7 @@ func shortcutsHelp() {
 
 // toggles the visualization of instructions between raw data and operation name
 func toggleInstView() {
-	fmt.Println("toggle activated")
 	viewMode = viewMode * -1
-	updateAllDisplay()
+	instructionList.Refresh()
 
 }
