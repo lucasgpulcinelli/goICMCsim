@@ -29,7 +29,7 @@ func fyneReadMIFCode(f io.ReadCloser) error {
 
 	data := p.GetData()
 	if len(data) != 1<<16 {
-		return fmt.Errorf("mif is not the right size for code: %d", len(data))
+		return fmt.Errorf("the MIF is not the right size for code: %d", len(data))
 	}
 
 	icmcSimulator.IsRunning = false
@@ -70,8 +70,8 @@ func fyneReadMIFChar(f io.ReadCloser) error {
 	}
 
 	data := p.GetData()
-	if len(data) != 1<<16 {
-		return fmt.Errorf("mif is not the right size for code: %d", len(data))
+	if len(data) != 1<<10 {
+		return fmt.Errorf("the MIF is not the correct size for char: %d", len(data))
 	}
 
 	// set the charmap to draw with
