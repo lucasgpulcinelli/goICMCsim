@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
+
 	"github.com/lucasgpulcinelli/goICMCsim/MIF"
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
 )
@@ -94,17 +97,16 @@ func restartCode() {
 
 // runUntilHalt runs the current instruction and the next ones until a halt is
 // found or the code crashes.
-func runUntilHalt() error {
+func runUntilHalt(w fyne.Window) {
 	// do everything in a separate goroutine, because fyne uses a display
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
 	
-	errCh := make(chan error) // chanel for capture error
-	
-	go func() {
+	go func(w fyne.Window) {
+
 		if icmcSimulator.IsRunning {
-			errCh <- errors.New("a simulation is already running") 
-			return 
+			dialog.ShowError(errors.New("a simulation is already running"), w) 
+			return
 		}
 
 		for i := 0; i < 10; i++ {
@@ -121,18 +123,16 @@ func runUntilHalt() error {
 
 		updateAllDisplay()
 		if err != nil {
-			errCh <- err
-			return
+			dialog.ShowError(err, w)
 		}
-	}()
-	var err error  = <-errCh
-	return err
+	}(w)
 }
 
 // runOneInst runs the instruction at the PC and increments it.
-func runOneInst() error {
+func runOneInst(w fyne.Window) {
 	if icmcSimulator.IsRunning {
-		return errors.New("a simulation is already running") 
+		dialog.ShowError(errors.New("a simulation is already running"), w)
+		return
 	}
 
 	simulatorMutex.Lock()
@@ -140,7 +140,9 @@ func runOneInst() error {
 	simulatorMutex.Unlock()
 
 	updateAllDisplay()
-	return err
+	if err != nil {
+		dialog.ShowError(err, w)
+	}
 }
 
 // stopSim stops the simulation if one was running

@@ -71,18 +71,8 @@ func makeMainMenu(w fyne.Window) {
 	// "options" menu toolbar
 	options := fyne.NewMenu("options",
 		fyne.NewMenuItem("reset", restartCode),
-		fyne.NewMenuItem("run until halt", func() {
-			var err error = runUntilHalt()
-			if err != nil {
-				dialog.ShowError(err, w)
-			}
-		}),
-		fyne.NewMenuItem("run one instruction", func ()  {
-			var err error = runOneInst()
-			if err != nil {
-				dialog.ShowError(err, w)
-			}
-		}),
+		fyne.NewMenuItem("run until halt", func() { runUntilHalt(w) }),
+		fyne.NewMenuItem("run one instruction", func () { runOneInst(w) }),
 		fyne.NewMenuItem("stop simulation", stopSim),
 	)
 
