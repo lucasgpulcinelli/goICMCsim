@@ -154,3 +154,10 @@ func stopSim() {
 func shortcutsHelp() {
 	helpPopUp.Show()
 }
+
+// toggles the visualization of instructions between raw data and operation name
+func toggleInstView() {
+	viewMode = viewMode * -1
+	instructionList.Refresh()
+
+}

@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	registers       [10]*widget.Entry // the registers (plus SP and PC) widgets for editing
-	instructionList *widget.List      // the instruction list widgets for editing
-	helpPopUp       *widget.PopUp     // the popup that appears to show help
+	registers       [10]*widget.Entry     // the registers (plus SP and PC) widgets for editing
+	instructionList *widget.List          // the instruction list widgets for editing
+	helpPopUp       *widget.PopUp         // the popup that appears to show help
+	viewMode        int               = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
 )
 
 // validateFileAndShowError checks if a file can be opened and if it's a .mif file.
@@ -74,6 +75,7 @@ func makeMainMenu(w fyne.Window) {
 		fyne.NewMenuItem("run until halt", func() { runUntilHalt(w) }),
 		fyne.NewMenuItem("run one instruction", func () { runOneInst(w) }),
 		fyne.NewMenuItem("stop simulation", stopSim),
+		fyne.NewMenuItem("toggle instruction view", toggleInstView),
 	)
 
 	// "help" menu toolbar
@@ -158,8 +160,9 @@ func makeInstructionScroll() fyne.CanvasObject {
 			// get the mnemonic for that instruction, and display it besides it's
 			// location
 
-			mnemonic := icmcSimulator.GetMnemonic(i)
+			mnemonic := icmcSimulator.GetMnemonic(i, viewMode)
 			finalS := fmt.Sprintf("%.5d | %s", i, mnemonic)
+
 			obj.(*widget.Label).SetText(finalS)
 		},
 	)
@@ -198,7 +201,9 @@ func updateAllDisplay() {
 		default:
 			v = icmcSimulator.GPRRegs[i]
 		}
-		reg.SetText(fmt.Sprintf("%d", v))
+
+		reg.SetText(fmt.Sprintf("%d", v)) // displays registers value on the left vertical table
+
 	}
 
 	instructionList.Select(widget.ListItemID(icmcSimulator.PC))
