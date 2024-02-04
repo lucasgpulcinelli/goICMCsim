@@ -25,13 +25,13 @@ func getFiles() (codem, charm io.ReadCloser) {
 	if *initialCode != "" {
 		codem, err = os.Open(*initialCode)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialCode, err.Error())
+			log.Printf("error opening %s: %v\n", *initialCode, err.Error())// TODO: log -> dialog/logFile
 		}
 	}
 	if *initialChar != "" {
 		charm, err = os.Open(*initialChar)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialChar, err.Error())
+			log.Printf("error opening %s: %v\n", *initialChar, err.Error())// TODO: log -> dialog/logFile
 		}
 	}
 	return
