@@ -127,7 +127,7 @@ func updateClockLabel(done chan struct{}) {
 			return
 		case <-ticker.C:
 			instPerSec := icmcSimulator.InstCount - instStart
-			periodLabel.SetText(getClockText(float32(instPerSec)))
+			periodLabel.SetText(getClockText(float32(instPerSec * 10)))
 			instStart = icmcSimulator.InstCount
 		}
 	}
