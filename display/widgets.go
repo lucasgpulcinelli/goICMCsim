@@ -73,7 +73,7 @@ func makeMainMenu(w fyne.Window) {
 	options := fyne.NewMenu("options",
 		fyne.NewMenuItem("reset", restartCode),
 		fyne.NewMenuItem("run until halt", func() { runUntilHalt(w) }),
-		fyne.NewMenuItem("run one instruction", func () { runOneInst(w) }),
+		fyne.NewMenuItem("run one instruction", func() { runOneInst(w) }),
 		fyne.NewMenuItem("stop simulation", stopSim),
 		fyne.NewMenuItem("toggle instruction view", toggleInstView),
 	)

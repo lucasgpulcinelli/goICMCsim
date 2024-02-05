@@ -1,9 +1,9 @@
 package display
 
 import (
-	"io"
 	"errors"
 	"fmt"
+	"io"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -101,11 +101,11 @@ func runUntilHalt(w fyne.Window) {
 	// do everything in a separate goroutine, because fyne uses a display
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
-	
+
 	go func(w fyne.Window) {
 
 		if icmcSimulator.IsRunning {
-			dialog.ShowError(errors.New("a simulation is already running"), w) 
+			dialog.ShowError(errors.New("a simulation is already running"), w)
 			return
 		}
 
