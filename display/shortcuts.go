@@ -41,8 +41,8 @@ func handleShortcuts(sh fyne.Shortcut) {
 
 // setupShortcuts adds all shortcuts from the simulator to a window.
 func setupShortcuts() {
-	window.Canvas().AddShortcut(&shortOneInst, func(sh fyne.Shortcut) { handleShortcuts(sh) })
-	window.Canvas().AddShortcut(&shortUntilHalt, func(sh fyne.Shortcut) { handleShortcuts(sh) })
-	window.Canvas().AddShortcut(&shortReset, func(sh fyne.Shortcut) { handleShortcuts(sh) })
-	window.Canvas().AddShortcut(&shortStop, func(sh fyne.Shortcut) { handleShortcuts(sh) })
+	window.Canvas().AddShortcut(&shortOneInst, handleShortcuts)
+	window.Canvas().AddShortcut(&shortUntilHalt, handleShortcuts)
+	window.Canvas().AddShortcut(&shortReset, handleShortcuts)
+	window.Canvas().AddShortcut(&shortStop, handleShortcuts)
 }
