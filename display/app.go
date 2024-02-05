@@ -21,6 +21,8 @@ var (
 	simulatorMutex sync.Mutex               // the mutex to sync simulator actions
 
 	currentKey atomic.Value // the current key pressed by the user in ascii
+
+	window fyne.Window // the main window instance for the ICMC simulator
 )
 
 // FyneInChar implements the inchar instruction for the simulator: just read
@@ -64,6 +66,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	// functions.
 	main := app.New()
 	w := main.NewWindow("ICMC Simulator")
+	window = w
 
 	vp := draw.MakeViewPort()
 	regs := makeRegisters()
