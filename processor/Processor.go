@@ -70,31 +70,33 @@ func fetchInstruction(op Opcode) (Instruction, bool) {
 	return Instruction{}, false
 }
 
-// RunInstruction runs a single instruction, incrementing the program counter
-// unless the instruction is halt. It returns if the processor should still
-// run (true) or should stop immediatly (in the case of a halt or breakp).
-func (pr *ICMCProcessor) RunInstruction() (bool, error) {
+// RunInstruction runs a single instruction, incrementing the program counter.
+func (pr *ICMCProcessor) RunInstruction() error {
 	if pr.PC >= ((1 << 15) - 1) {
-		return false, fmt.Errorf("PC at the end of data section")
+		return fmt.Errorf("PC at the end of data section")
 	}
 
 	currentOpcode := Opcode(pr.Data[pr.PC] >> 10)
 
-	if currentOpcode == OpHALT {
-		return false, nil
-	}
-
 	inst, ok := fetchInstruction(currentOpcode)
 	if !ok {
 		pr.PC++ // skip this instruction in order not to loop on the same error
-		return false, fmt.Errorf("instruction does not exist")
+		return fmt.Errorf("instruction does not exist")
 	}
 
 	err := inst.Execute(pr)
 
 	pr.PC += uint16(inst.Size)
 	pr.InstCount++
-	return currentOpcode != OpBREAKP, err
+	return err
+}
+
+// busySleep loops the correct amount of time from a start time until 1000
+// instruction execution period. This is done in a separate function to ease
+// profiling
+func busySleep(instPeriod *time.Duration, start time.Time) {
+	for 1000*(*instPeriod)-time.Since(start) > 0 {
+	}
 }
 
 // RunUntilHalt runs every instruction until a halt is found or an error occurs
@@ -103,39 +105,34 @@ func (pr *ICMCProcessor) RunInstruction() (bool, error) {
 // If an error happens the program counter is still incremented, but if a halt
 // is read it will stop right before the increment.
 func (pr *ICMCProcessor) RunUntilHalt(instPeriod *time.Duration) (err error) {
-	var remain bool
 	pr.IsRunning = true
 
 	start := time.Now()
 
-	// this timerCounter counts until 1000, when it hits this value it resets
-	// and the processor sleeps for a bit in order to adjust to the frequency
-	// requested by the user. This is only done each 1000 instructions because
-	// time.Now() is an expensive function, so running it every instruction would
-	// slow down the program significantly
-	timerCounter := 0
-
-	for pr.IsRunning {
-		remain, err = pr.RunInstruction()
-		if !remain || err != nil {
-			pr.IsRunning = false
+	for {
+		err = pr.RunInstruction()
+		if err != nil || !pr.IsRunning {
+			break
 		}
-		timerCounter++
 
-		if timerCounter == 1000 {
-			timerCounter = 0
-
-			// busy sleep until the correct amount of time has passed (using
-			// time.Sleep() would fluctuate the frequency by a lot)
-			for 1000*(*instPeriod)-time.Since(start) > 0 {
-
-			}
+		// run the busy sleep only once every 1000 instructions, because time.Now()
+		// and time.Since() in a loop are expensive operations in our
+		// context, so it would affect execution time substatially when the clock
+		// frequency was high.
+		if pr.InstCount%1000 == 0 {
+			busySleep(instPeriod, start)
 
 			start = time.Now()
 		}
 	}
 
-	return err
+	pr.IsRunning = false
+
+	if err.Error() == "stop" {
+		err = nil
+	}
+
+	return
 }
 
 // Reset returns all registers to their initial state, and cleans the data

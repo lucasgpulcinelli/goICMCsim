@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/lucasgpulcinelli/goICMCsim/display"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 var (
@@ -38,6 +40,9 @@ func getFiles() (codem, charm io.ReadCloser) {
 }
 
 func main() {
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 	codem, charm := getFiles()
 	display.StartSimulatorWindow(codem, charm)
 }

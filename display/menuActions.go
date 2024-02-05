@@ -178,11 +178,11 @@ func runOneInst(w fyne.Window) {
 	}
 
 	simulatorMutex.Lock()
-	_, err := icmcSimulator.RunInstruction()
+	err := icmcSimulator.RunInstruction()
 	simulatorMutex.Unlock()
 
 	updateAllDisplay()
-	if err != nil {
+	if err != nil && err.Error() != "stop" {
 		dialog.ShowError(err, w)
 	}
 }

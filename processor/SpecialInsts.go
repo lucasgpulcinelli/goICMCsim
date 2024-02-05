@@ -1,5 +1,7 @@
 package processor
 
+import "fmt"
+
 func genCSCARRYM(inst uint16) string {
 	if inst&(1<<9) != 0 {
 		return "clearc"
@@ -50,4 +52,8 @@ func execCSCARRY(pr *ICMCProcessor) error {
 // in RunInstruction directly just via their opcode, such as breakp and halt.
 func execNOP(pr *ICMCProcessor) error {
 	return nil
+}
+
+func execSTOP(pr *ICMCProcessor) error {
+	return fmt.Errorf("stop")
 }
