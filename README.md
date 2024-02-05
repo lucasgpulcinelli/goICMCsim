@@ -62,11 +62,8 @@ func execINCMOD(pr *ICMCProcessor) error {
 
 # What you can do to help the GO ICMC Simulator's development
 An open source project is never complete. Please help the project by submitting issues and pull requests! They will be happly accepted if they help the overall project. Some examples of what can be done:
-- Add a button to switch the instruction list from displaying dissasembled mnemonics and operands and start displaying raw data. This is essential to help programmers debug memory operations!
-- Add a configurable clock speed to simulate the speed of the original processor.
 - Fully complete the MIF syntax parsing in the MIF package and official quartus documentation.
 - Increase processor speed by changing processor.fetchInstruction, for now the instruction fetching based on opcodes is the main bottleneck for performace.
-- Add better error display (instead of relying on log.Println for unexpected errors)
 - Add a right click options menu for each instruction in the list to edit memory in place or add breakpoints. This is possible using a new type and go struct inheritance in the instructionList and some remodeling in processor.RunUntilHalt.
 - Documentation of instruction execution and mnemonic generation.
 
