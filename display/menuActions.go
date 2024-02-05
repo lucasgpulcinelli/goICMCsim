@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
@@ -95,6 +96,43 @@ func restartCode() {
 	updateAllDisplay()
 }
 
+// getClockText returns the current processor frequency given the amount of
+// instructions per second executed.
+func getClockText(instructionsPerSec float32) string {
+	scale := 0
+	instructionsPerSec /= 1000
+
+	for ; instructionsPerSec >= 1000 && scale < 5; scale++ {
+		instructionsPerSec /= 1000
+	}
+
+	scaleStr := []string{"k", "M", "G", "T"}[scale]
+
+	return fmt.Sprintf("clock:%8.2f %sHz", instructionsPerSec, scaleStr)
+}
+
+// updateClockLabel ticks a 100ms timer to update the clock frequency in the
+// respective label. When the done channel receives a value, the function
+// exits.
+// this functions is expected to run in a dedicated goroutine.
+func updateClockLabel(done chan struct{}) {
+	instStart := icmcSimulator.InstCount
+
+	ticker := time.NewTicker(time.Second / 10)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			instPerSec := icmcSimulator.InstCount - instStart
+			periodLabel.SetText(getClockText(float32(instPerSec)))
+			instStart = icmcSimulator.InstCount
+		}
+	}
+}
+
 // runUntilHalt runs the current instruction and the next ones until a halt is
 // found or the code crashes.
 func runUntilHalt(w fyne.Window) {
@@ -103,18 +141,22 @@ func runUntilHalt(w fyne.Window) {
 	// trying to update stuff while the processor is running
 
 	go func(w fyne.Window) {
-
 		if icmcSimulator.IsRunning {
 			dialog.ShowError(errors.New("a simulation is already running"), w)
 			return
 		}
+
+		done := make(chan struct{})
+		defer func() { done <- struct{}{} }()
+
+		go updateClockLabel(done)
 
 		for i := 0; i < 10; i++ {
 			registers[i].Disable()
 		}
 
 		simulatorMutex.Lock()
-		err := icmcSimulator.RunUntilHalt()
+		err := icmcSimulator.RunUntilHalt(instructionPeriod)
 		simulatorMutex.Unlock()
 
 		for i := 0; i < 10; i++ {

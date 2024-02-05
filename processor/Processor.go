@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // flagRegisterState defines the possible flag register conditions
@@ -30,6 +31,8 @@ type ICMCProcessor struct {
 	GPRRegs [8]uint16       // the list of register values stored
 	SP      uint16          // stack pointer
 	PC      uint16          // program counter
+
+	InstCount uint64 // the number of instructions since the processor started running
 
 	fr flagRegisterState // the flag register, internal because of it's non portability
 
@@ -90,22 +93,48 @@ func (pr *ICMCProcessor) RunInstruction() (bool, error) {
 	err := inst.Execute(pr)
 
 	pr.PC += uint16(inst.Size)
+	pr.InstCount++
 	return currentOpcode != OpBREAKP, err
 }
 
-// RunUntilHalt runs every instruction until a halt is found or an error occurs.
+// RunUntilHalt runs every instruction until a halt is found or an error occurs
+// with a certain average period between instructions. The period is a pointer
+// to allow for dynamic modification.
 // If an error happens the program counter is still incremented, but if a halt
 // is read it will stop right before the increment.
-func (pr *ICMCProcessor) RunUntilHalt() (err error) {
+func (pr *ICMCProcessor) RunUntilHalt(instPeriod *time.Duration) (err error) {
 	var remain bool
 	pr.IsRunning = true
+
+	start := time.Now()
+
+	// this timerCounter counts until 1000, when it hits this value it resets
+	// and the processor sleeps for a bit in order to adjust to the frequency
+	// requested by the user. This is only done each 1000 instructions because
+	// time.Now() is an expensive function, so running it every instruction would
+	// slow down the program significantly
+	timerCounter := 0
 
 	for pr.IsRunning {
 		remain, err = pr.RunInstruction()
 		if !remain || err != nil {
 			pr.IsRunning = false
 		}
+		timerCounter++
+
+		if timerCounter == 1000 {
+			timerCounter = 0
+
+			// busy sleep until the correct amount of time has passed (using
+			// time.Sleep() would fluctuate the frequency by a lot)
+			for 1000*(*instPeriod)-time.Since(start) > 0 {
+
+			}
+
+			start = time.Now()
+		}
 	}
+
 	return err
 }
 

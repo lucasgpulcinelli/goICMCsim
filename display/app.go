@@ -6,6 +6,7 @@ import (
 	"io"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -17,10 +18,11 @@ import (
 )
 
 var (
-	icmcSimulator  *processor.ICMCProcessor // the main simulator instance itself
-	simulatorMutex sync.Mutex               // the mutex to sync simulator actions
+	icmcSimulator  *processor.ICMCProcessor // main simulator instance itself
+	simulatorMutex sync.Mutex               // mutex to sync simulator actions
 
-	currentKey atomic.Value // the current key pressed by the user in ascii
+	currentKey        atomic.Value   // current key pressed by the user in ascii
+	instructionPeriod *time.Duration // period between instructions
 )
 
 // FyneInChar implements the inchar instruction for the simulator: just read
@@ -54,6 +56,8 @@ func setupInput(w fyne.Window) {
 // StartSimulatorWindow creates and starts the execution of the ICMC simulator.
 // it takes as input the initial MIFs for code and character mapping.
 func StartSimulatorWindow(codem, charm io.ReadCloser) {
+	instructionPeriod = new(time.Duration)
+
 	// initializes the first key pressed with 255
 	currentKey.Store(uint8(255))
 
@@ -69,9 +73,15 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	regs := makeRegisters()
 	insts := makeInstructionScroll()
 
+	clockView := makeClockSlider()
+
+	viewPortBorder := container.NewBorder(
+		nil, clockView, nil, nil, vp,
+	)
+
 	mainView := container.NewHSplit(
 		insts,
-		vp,
+		viewPortBorder,
 	)
 	mainView.SetOffset(0.15)
 

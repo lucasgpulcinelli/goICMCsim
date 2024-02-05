@@ -3,9 +3,11 @@ package display
 import (
 	"errors"
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -14,9 +16,10 @@ import (
 )
 
 var (
-	registers       [10]*widget.Entry     // the registers (plus SP and PC) widgets for editing
-	instructionList *widget.List          // the instruction list widgets for editing
-	helpPopUp       *widget.PopUp         // the popup that appears to show help
+	registers       [10]*widget.Entry     // registers (plus SP and PC) widgets for editing
+	instructionList *widget.List          // instruction list widgets for editing
+	helpPopUp       *widget.PopUp         // popup that appears to show help
+	periodLabel     *widget.Label         // current clock frequency label
 	viewMode        int               = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
 )
 
@@ -89,6 +92,22 @@ func makeMainMenu(w fyne.Window) {
 		options,
 		help,
 	))
+}
+
+// makeClockSlider creates the CanvasObject displaying the clock frequency and
+// with a slider to control it.
+func makeClockSlider() fyne.CanvasObject {
+	slider := widget.NewSlider(0, 700) // in log scale from 1ns to 10ms (1e7ns)
+	periodLabel = widget.NewLabel("clock: 100.00 MHz")
+
+	slider.OnChanged = func(newValue float64) {
+		period := math.Pow(10, newValue/100)
+		*instructionPeriod = time.Duration(period)
+	}
+
+	return container.NewBorder(
+		nil, nil, periodLabel, nil, slider,
+	)
 }
 
 // makeRegisters creates a CanvasObject with all registers (plus SP and PC)
