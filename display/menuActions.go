@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 
 	"github.com/lucasgpulcinelli/goICMCsim/MIF"
@@ -14,22 +13,25 @@ import (
 
 // fyneReadMIFCode reads the instructions from a code MIF file and loads them
 // into the simulator.
-func fyneReadMIFCode(f io.ReadCloser) error {
+func fyneReadMIFCode(f io.ReadCloser) {
 	var err error
 
 	if f == nil {
-		return errors.New("reader is nil")
+		dialog.ShowError(errors.New("reader is nil"), window)
+		return 
 	}
 
 	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
-		return err
+		dialog.ShowError(err, window)
+		return
 	}
 
 	data := p.GetData()
 	if len(data) != 1<<16 {
-		return fmt.Errorf("the MIF is not the right size for code: %d", len(data))
+		dialog.ShowError(fmt.Errorf("the MIF is not the right size for code: %d", len(data)), window)
+		return 
 	}
 
 	icmcSimulator.IsRunning = false
@@ -48,7 +50,9 @@ func fyneReadMIFCode(f io.ReadCloser) error {
 	restartCode()
 	f.Close()
 
-	return err
+	if err != nil {
+		dialog.ShowError(err, window)
+	}
 }
 
 // fyneReadMIFChar reads the character mapping definition from a MIF file and
@@ -56,22 +60,25 @@ func fyneReadMIFCode(f io.ReadCloser) error {
 // is running, in that case, only the next drawn characters will have the new
 // char mapping, the ones that have already been drawn will stay the way they
 // were.
-func fyneReadMIFChar(f io.ReadCloser) error {
+func fyneReadMIFChar(f io.ReadCloser) {
 	var err error
 
 	if f == nil {
-		return errors.New("reader is nil")
+		dialog.ShowError(errors.New("reader is nil"), window)
+		return 
 	}
 
 	// create a new MIF parser and read everything
 	p := MIF.NewParser(f)
 	if err = p.Parse(); err != nil {
-		return err
+		dialog.ShowError(err, window)
+		return
 	}
 
 	data := p.GetData()
 	if len(data) != 1<<10 {
-		return fmt.Errorf("the MIF is not the correct size for char: %d", len(data))
+		dialog.ShowError(fmt.Errorf("the MIF is not the correct size for char: %d", len(data)), window)
+		return 
 	}
 
 	// set the charmap to draw with
@@ -79,7 +86,9 @@ func fyneReadMIFChar(f io.ReadCloser) error {
 	draw.RedrawScreen()
 	f.Close()
 
-	return err
+	if err != nil {
+		dialog.ShowError(err, window)
+	}
 }
 
 // restartCode resets the whole simulator to their default state,
@@ -97,15 +106,15 @@ func restartCode() {
 
 // runUntilHalt runs the current instruction and the next ones until a halt is
 // found or the code crashes.
-func runUntilHalt(w fyne.Window) {
+func runUntilHalt() {
 	// do everything in a separate goroutine, because fyne uses a display
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
 	
-	go func(w fyne.Window) {
+	go func() {
 
 		if icmcSimulator.IsRunning {
-			dialog.ShowError(errors.New("a simulation is already running"), w) 
+			dialog.ShowError(errors.New("a simulation is already running"), window) 
 			return
 		}
 
@@ -123,15 +132,15 @@ func runUntilHalt(w fyne.Window) {
 
 		updateAllDisplay()
 		if err != nil {
-			dialog.ShowError(err, w)
+			dialog.ShowError(err, window)
 		}
-	}(w)
+	}()
 }
 
 // runOneInst runs the instruction at the PC and increments it.
-func runOneInst(w fyne.Window) {
+func runOneInst() {
 	if icmcSimulator.IsRunning {
-		dialog.ShowError(errors.New("a simulation is already running"), w)
+		dialog.ShowError(errors.New("a simulation is already running"), window)
 		return
 	}
 
@@ -141,7 +150,7 @@ func runOneInst(w fyne.Window) {
 
 	updateAllDisplay()
 	if err != nil {
-		dialog.ShowError(err, w)
+		dialog.ShowError(err, window)
 	}
 }
 

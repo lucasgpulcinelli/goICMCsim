@@ -18,7 +18,7 @@ var (
 
 // handleShortcuts runs whem every shortcut is triggered, responsible for
 // calling the associated menu action.
-func handleShortcuts(sh fyne.Shortcut, w fyne.Window) {
+func handleShortcuts(sh fyne.Shortcut) {
 	desktopSh, ok := sh.(*desktop.CustomShortcut)
 	if !ok {
 		fmt.Println("shortcut is not of expected type")
@@ -27,9 +27,9 @@ func handleShortcuts(sh fyne.Shortcut, w fyne.Window) {
 
 	switch *desktopSh {
 	case shortOneInst:
-		runOneInst(w)
+		runOneInst()
 	case shortUntilHalt:
-		runUntilHalt(w)
+		runUntilHalt()
 	case shortReset:
 		restartCode()
 	case shortStop:
@@ -40,9 +40,9 @@ func handleShortcuts(sh fyne.Shortcut, w fyne.Window) {
 }
 
 // setupShortcuts adds all shortcuts from the simulator to a window.
-func setupShortcuts(w fyne.Window) {
-	w.Canvas().AddShortcut(&shortOneInst, func(sh fyne.Shortcut) { handleShortcuts(sh, w) })
-	w.Canvas().AddShortcut(&shortUntilHalt, func(sh fyne.Shortcut) { handleShortcuts(sh, w) })
-	w.Canvas().AddShortcut(&shortReset, func(sh fyne.Shortcut) { handleShortcuts(sh, w) })
-	w.Canvas().AddShortcut(&shortStop, func(sh fyne.Shortcut) { handleShortcuts(sh, w) })
+func setupShortcuts() {
+	window.Canvas().AddShortcut(&shortOneInst, func(sh fyne.Shortcut) { handleShortcuts(sh) })
+	window.Canvas().AddShortcut(&shortUntilHalt, func(sh fyne.Shortcut) { handleShortcuts(sh) })
+	window.Canvas().AddShortcut(&shortReset, func(sh fyne.Shortcut) { handleShortcuts(sh) })
+	window.Canvas().AddShortcut(&shortStop, func(sh fyne.Shortcut) { handleShortcuts(sh) })
 }

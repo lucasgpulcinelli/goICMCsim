@@ -22,46 +22,41 @@ var (
 
 // validateFileAndShowError checks if a file can be opened and if it's a .mif file.
 // If the file cannot be opened or is not a .mif file, it displays an error to the user.
-func validateFileAndShowError(f fyne.URIReadCloser, err error, w fyne.Window) {
+func validateFileAndShowError(f fyne.URIReadCloser, err error) {
 	if err != nil {
-		dialog.ShowError(err, w)
+		dialog.ShowError(err, window)
 		return
 	}
 
 	if f == nil {
-		dialog.ShowError(errors.New("could not open a file"), w)
+		dialog.ShowError(errors.New("could not open a file"), window)
 		return
 	}
 
 	// Checks if the file has the .mif extension
 	if strings.ToLower(filepath.Ext(f.URI().Path())) != ".mif" {
-		dialog.ShowError(errors.New("file is not a .mif file"), w)
+		dialog.ShowError(errors.New("file is not a .mif file"), window)
 		return
 	}
 }
 
 // makeMainMenu adds in window the main menubar with all code actions
 // associated. Most code actions are complex and defined in menuActions.go.
-func makeMainMenu(w fyne.Window) {
+func makeMainMenu() {
 	// both file dialog window popup instance (creates a little window to choose
 	// a file for either a code or char MIF file)
 	openCodeDialog := dialog.NewFileOpen(
 		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err, w)
-			err = fyneReadMIFCode(f)
-			if err != nil {
-				dialog.ShowError(err, w)
-			}
-		}, w)
+			validateFileAndShowError(f, err)
+			fyneReadMIFCode(f)
+
+		}, window)
 
 	openCharDialog := dialog.NewFileOpen(
 		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err, w)
-			err = fyneReadMIFChar(f)
-			if err != nil {
-				dialog.ShowError(err, w)
-			}
-		}, w)
+			validateFileAndShowError(f, err)
+			fyneReadMIFChar(f)
+		}, window)
 
 	// "file" menu toolbar
 	file := fyne.NewMenu("file",
@@ -72,8 +67,8 @@ func makeMainMenu(w fyne.Window) {
 	// "options" menu toolbar
 	options := fyne.NewMenu("options",
 		fyne.NewMenuItem("reset", restartCode),
-		fyne.NewMenuItem("run until halt", func() { runUntilHalt(w) }),
-		fyne.NewMenuItem("run one instruction", func () { runOneInst(w) }),
+		fyne.NewMenuItem("run until halt", func() { runUntilHalt() }),
+		fyne.NewMenuItem("run one instruction", func () { runOneInst() }),
 		fyne.NewMenuItem("stop simulation", stopSim),
 		fyne.NewMenuItem("toggle instruction view", toggleInstView),
 	)
@@ -84,7 +79,7 @@ func makeMainMenu(w fyne.Window) {
 	)
 
 	// with all menus, create the main one itself and associate it with the window
-	w.SetMainMenu(fyne.NewMainMenu(
+	window.SetMainMenu(fyne.NewMainMenu(
 		file,
 		options,
 		help,
@@ -172,7 +167,7 @@ func makeInstructionScroll() fyne.CanvasObject {
 
 // makeHelpPopUp creates the popup that will appear when the user presses the
 // menu button for help.
-func makeHelpPopUp(w fyne.Window) {
+func makeHelpPopUp() {
 	help := widget.NewLabel(`
   Ctrl+Tab runs a single instruction;
   Ctrl+H runs instructions until a halt, breakp or error is found;
@@ -183,7 +178,7 @@ func makeHelpPopUp(w fyne.Window) {
 
 	helpPopUp = widget.NewModalPopUp(
 		container.NewBorder(nil, ok, nil, nil, help),
-		w.Canvas(),
+		window.Canvas(),
 	)
 }
 
