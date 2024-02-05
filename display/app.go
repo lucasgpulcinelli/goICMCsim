@@ -36,13 +36,27 @@ func FyneInChar() (uint8, error) {
 // setupInput creates hooks for when the user types keys while the simulator
 // is running, collecting them for a possible future inchar.
 func setupInput(w fyne.Window) {
-	// for some reason, SetOnTypedRune does not work for enters, so SetOnTypedKey
-	// is used.
+	// for some reason, SetOnTypedRune does not work for some characters, so use
+	// the alternative that works in these cases.
 	w.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
 		if icmcSimulator.IsRunning {
 			switch ev.Name {
 			case fyne.KeyReturn:
 				currentKey.Store(uint8('\r'))
+			case fyne.KeyBackspace:
+				currentKey.Store(uint8(8))
+			case fyne.KeyDelete:
+				currentKey.Store(uint8(127))
+			case fyne.KeyEscape:
+				currentKey.Store(uint8(27))
+			case fyne.KeyUp:
+				currentKey.Store(uint8(38))
+			case fyne.KeyDown:
+				currentKey.Store(uint8(40))
+			case fyne.KeyLeft:
+				currentKey.Store(uint8(37))
+			case fyne.KeyRight:
+				currentKey.Store(uint8(39))
 			}
 		}
 	})

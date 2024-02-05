@@ -128,7 +128,7 @@ func (pr *ICMCProcessor) RunUntilHalt(instPeriod *time.Duration) (err error) {
 
 	pr.IsRunning = false
 
-	if err.Error() == "stop" {
+	if err != nil && err.Error() == "stop" {
 		err = nil
 	}
 
