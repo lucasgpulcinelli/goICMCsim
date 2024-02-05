@@ -84,7 +84,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	makeMainMenu()
 	makeHelpPopUp()
 
-	w.Resize(fyne.NewSize(900, 500))
+	window.Resize(fyne.NewSize(900, 500))
 
 	// if the code or char mapping MIFs were defined, read them
 	if codem != nil {
