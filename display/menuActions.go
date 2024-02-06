@@ -1,9 +1,9 @@
 package display
 
 import (
-	"io"
 	"errors"
 	"fmt"
+	"io"
 
 	"fyne.io/fyne/v2/dialog"
 
@@ -18,7 +18,7 @@ func fyneReadMIFCode(f io.ReadCloser) {
 
 	if f == nil {
 		dialog.ShowError(errors.New("reader is nil"), window)
-		return 
+		return
 	}
 
 	// create a new MIF parser and read everything
@@ -30,8 +30,11 @@ func fyneReadMIFCode(f io.ReadCloser) {
 
 	data := p.GetData()
 	if len(data) != 1<<16 {
-		dialog.ShowError(fmt.Errorf("the MIF is not the right size for code: %d", len(data)), window)
-		return 
+		dialog.ShowError(
+			fmt.Errorf("the MIF is not the right size for code: %d", len(data)),
+			window,
+		)
+		return
 	}
 
 	icmcSimulator.IsRunning = false
@@ -65,7 +68,7 @@ func fyneReadMIFChar(f io.ReadCloser) {
 
 	if f == nil {
 		dialog.ShowError(errors.New("reader is nil"), window)
-		return 
+		return
 	}
 
 	// create a new MIF parser and read everything
@@ -77,8 +80,11 @@ func fyneReadMIFChar(f io.ReadCloser) {
 
 	data := p.GetData()
 	if len(data) != 1<<10 {
-		dialog.ShowError(fmt.Errorf("the MIF is not the correct size for char: %d", len(data)), window)
-		return 
+		dialog.ShowError(
+			fmt.Errorf("the MIF is not the correct size for char: %d", len(data)),
+			window,
+		)
+		return
 	}
 
 	// set the charmap to draw with
@@ -110,11 +116,11 @@ func runUntilHalt() {
 	// do everything in a separate goroutine, because fyne uses a display
 	// goroutine to run this function, meaning the display would malfunction when
 	// trying to update stuff while the processor is running
-	
+
 	go func() {
 
 		if icmcSimulator.IsRunning {
-			dialog.ShowError(errors.New("a simulation is already running"), window) 
+			dialog.ShowError(errors.New("a simulation is already running"), window)
 			return
 		}
 

@@ -64,8 +64,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	// create the new fyne app, with a title and content defined in other
 	// functions.
 	main := app.New()
-	w := main.NewWindow("ICMC Simulator")
-	window = w
+	window = main.NewWindow("ICMC Simulator")
 
 	vp := draw.MakeViewPort()
 	regs := makeRegisters()
