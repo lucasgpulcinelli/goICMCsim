@@ -64,6 +64,7 @@ func execINCMOD(pr *ICMCProcessor) error {
 An open source project is never complete. Please help the project by submitting issues and pull requests! They will be happly accepted if they help the overall project. Some examples of what can be done:
 - Fully complete the MIF syntax parsing in the MIF package and official quartus documentation.
 - Increase processor speed by changing processor.fetchInstruction, for now the instruction fetching based on opcodes is the main bottleneck for performace.
+- Create a default "hello world" MIF code and character set and use it if the user did not pass any files themselves. To do that take a look at [the embed package](https://pkg.go.dev/embed).
 - Add a right click options menu for each instruction in the list to edit memory in place or add breakpoints. This is possible using a new type and go struct inheritance in the instructionList and some remodeling in processor.RunUntilHalt.
 - Documentation of instruction execution and mnemonic generation.
 
