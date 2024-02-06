@@ -11,7 +11,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 
 	"github.com/lucasgpulcinelli/goICMCsim/display/draw"
 	"github.com/lucasgpulcinelli/goICMCsim/processor"
@@ -23,6 +22,7 @@ var (
 
 	currentKey        atomic.Value   // current key pressed by the user in ascii
 	instructionPeriod *time.Duration // period between instructions
+	window            fyne.Window    // main window instance for the ICMC simulator
 )
 
 // FyneInChar implements the inchar instruction for the simulator: just read
@@ -35,10 +35,10 @@ func FyneInChar() (uint8, error) {
 
 // setupInput creates hooks for when the user types keys while the simulator
 // is running, collecting them for a possible future inchar.
-func setupInput(w fyne.Window) {
+func setupInput() {
 	// for some reason, SetOnTypedRune does not work for some characters, so use
 	// the alternative that works in these cases.
-	w.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
+	window.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
 		if icmcSimulator.IsRunning {
 			switch ev.Name {
 			case fyne.KeyReturn:
@@ -60,7 +60,7 @@ func setupInput(w fyne.Window) {
 			}
 		}
 	})
-	w.Canvas().SetOnTypedRune(func(r rune) {
+	window.Canvas().SetOnTypedRune(func(r rune) {
 		if icmcSimulator.IsRunning {
 			currentKey.Store(uint8(r))
 		}
@@ -81,7 +81,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	// create the new fyne app, with a title and content defined in other
 	// functions.
 	main := app.New()
-	w := main.NewWindow("ICMC Simulator")
+	window = main.NewWindow("ICMC Simulator")
 
 	vp := draw.MakeViewPort()
 	regs := makeRegisters()
@@ -102,33 +102,27 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	content := container.NewHSplit(regs, mainView)
 	content.SetOffset(0.10)
 
-	w.SetContent(content)
-	makeMainMenu(w)
-	makeHelpPopUp(w)
+	window.SetContent(content)
+	makeMainMenu()
+	makeHelpPopUp()
 
-	w.Resize(fyne.NewSize(900, 500))
+	window.Resize(fyne.NewSize(900, 500))
 
 	// if the code or char mapping MIFs were defined, read them
 	if codem != nil {
-		var err error = fyneReadMIFCode(codem)
-		if err != nil {
-			dialog.ShowError(err, w)
-		}
+		fyneReadMIFCode(codem)
 	}
 	if charm != nil {
-		var err error = fyneReadMIFChar(charm)
-		if err != nil {
-			dialog.ShowError(err, w)
-		}
+		fyneReadMIFChar(charm)
 	}
 
 	// refresh the display initially to create a proprer instruction scroll and
 	// register data.
 	updateAllDisplay()
 
-	setupInput(w)
-	setupShortcuts(w)
+	setupInput()
+	setupShortcuts()
 
 	// after everything was initialized, show the window!
-	w.ShowAndRun()
+	window.ShowAndRun()
 }
