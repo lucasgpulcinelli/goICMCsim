@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"io"
-	"log"
 	"os"
 
-	"github.com/lucasgpulcinelli/goICMCsim/display"
 	"net/http"
 	_ "net/http/pprof"
+
+	"github.com/lucasgpulcinelli/goICMCsim/display"
+	"github.com/sqweek/dialog"
 )
 
 var (
@@ -27,13 +28,15 @@ func getFiles() (codem, charm io.ReadCloser) {
 	if *initialCode != "" {
 		codem, err = os.Open(*initialCode)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialCode, err.Error()) // TODO: log -> dialog/logFile
+			dialog.Message("ERROR codeMIF Opening\n\n%v\n", err.Error()).Error()
+			os.Exit(-1)
 		}
 	}
 	if *initialChar != "" {
 		charm, err = os.Open(*initialChar)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialChar, err.Error()) // TODO: log -> dialog/logFile
+			dialog.Message("ERROR charMIF Opening\n\n%v\n", err.Error()).Error()
+			os.Exit(-1)
 		}
 	}
 	return
