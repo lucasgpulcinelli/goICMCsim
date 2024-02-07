@@ -18,8 +18,8 @@ The first thing you will want to do is add a program to run and test it. This ca
 # How to Compile from the Source Code
 First, install a recent version of go (at least 1.13), either from your package manager or from [here](https://go.dev/doc/install). After that, you will also need git and a C compiler (on windows, you need to use MinGW).
 
-On debian/ubuntu based systems, you will need to install `libgl1-mesa-dev xorg-dev`;
-On fedora and red hat based systems, you will need to install `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel libXxf86vm-devel`;
+On debian/ubuntu based systems, you will need to install `libgl1-mesa-dev xorg-dev gtk3-dev`;
+On fedora and red hat based systems, you will need to install `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel libXxf86vm-devel gtk3-devel`;
 
 Then, Just use `go build .` to compile and `./goICMCsim` to start an empty processor. You can see the command line options with `--help`.
 

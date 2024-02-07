@@ -3,12 +3,10 @@ package main
 import (
 	"flag"
 	"io"
-	"log"
 	"os"
 
 	"github.com/lucasgpulcinelli/goICMCsim/display"
-	"net/http"
-	_ "net/http/pprof"
+	"github.com/sqweek/dialog"
 )
 
 var (
@@ -27,22 +25,23 @@ func getFiles() (codem, charm io.ReadCloser) {
 	if *initialCode != "" {
 		codem, err = os.Open(*initialCode)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialCode, err.Error()) // TODO: log -> dialog/logFile
+			dialog.Message(
+				"Reading %v failed:\n%v\n", *initialCode, err.Error()).Error()
+			os.Exit(-1)
 		}
 	}
 	if *initialChar != "" {
 		charm, err = os.Open(*initialChar)
 		if err != nil {
-			log.Printf("error opening %s: %v\n", *initialChar, err.Error()) // TODO: log -> dialog/logFile
+			dialog.Message(
+				"Reading %v failed:\n%v\n", *initialChar, err.Error()).Error()
+			os.Exit(-1)
 		}
 	}
 	return
 }
 
 func main() {
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
 	codem, charm := getFiles()
 	display.StartSimulatorWindow(codem, charm)
 }

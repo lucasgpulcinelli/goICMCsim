@@ -1,18 +1,19 @@
 package display
 
 import (
-	"errors"
 	"fmt"
+	"io"
 	"math"
-	"path/filepath"
+	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+
+	fileDialog "github.com/sqweek/dialog"
 )
 
 var (
@@ -23,48 +24,31 @@ var (
 	viewMode        int               = 1 // view type of instruction list (-1 -> raw, 1 -> op name)
 )
 
-// validateFileAndShowError checks if a file can be opened and if it's a .mif file.
-// If the file cannot be opened or is not a .mif file, it displays an error to the user.
-func validateFileAndShowError(f fyne.URIReadCloser, err error) {
+// fileSelect opens a file selection window and executes the callback after
+// opening the file and checking for errors.
+func fileSelect(callback func(io.ReadCloser), title string) {
+	fileName, err := fileDialog.File().Filter("MIF file", "mif").Title(title).Load()
 	if err != nil {
 		dialog.ShowError(err, window)
 		return
 	}
 
-	if f == nil {
-		dialog.ShowError(errors.New("could not open a file"), window)
+	file, err := os.OpenFile(fileName, os.O_RDONLY, 0)
+	if err != nil {
+		dialog.ShowError(err, window)
 		return
 	}
 
-	// Checks if the file has the .mif extension
-	if strings.ToLower(filepath.Ext(f.URI().Path())) != ".mif" {
-		dialog.ShowError(errors.New("file is not a .mif file"), window)
-		return
-	}
+	callback(file)
 }
 
 // makeMainMenu adds in window the main menubar with all code actions
 // associated. Most code actions are complex and defined in menuActions.go.
 func makeMainMenu() {
-	// both file dialog window popup instance (creates a little window to choose
-	// a file for either a code or char MIF file)
-	openCodeDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err)
-			fyneReadMIFCode(f)
-
-		}, window)
-
-	openCharDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err)
-			fyneReadMIFChar(f)
-		}, window)
-
 	// "file" menu toolbar
 	file := fyne.NewMenu("file",
-		fyne.NewMenuItem("open code MIF", func() { openCodeDialog.Show() }),
-		fyne.NewMenuItem("open char MIF", func() { openCharDialog.Show() }),
+		fyne.NewMenuItem("open code MIF", func() { fileSelect(fyneReadMIFCode, "Open code MIF") }),
+		fyne.NewMenuItem("open char MIF", func() { fileSelect(fyneReadMIFChar, "Open char MIF") }),
 	)
 
 	// "options" menu toolbar
