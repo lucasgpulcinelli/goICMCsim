@@ -26,8 +26,8 @@ var (
 
 // fileSelect opens a file selection window and executes the callback after
 // opening the file and checking for errors.
-func fileSelect(callback func(io.ReadCloser)) {
-	fileName, err := fileDialog.File().Load()
+func fileSelect(callback func(io.ReadCloser), title string) {
+	fileName, err := fileDialog.File().Filter("MIF file", "mif").Title(title).Load()
 	if err != nil {
 		dialog.ShowError(err, window)
 		return
@@ -47,8 +47,8 @@ func fileSelect(callback func(io.ReadCloser)) {
 func makeMainMenu() {
 	// "file" menu toolbar
 	file := fyne.NewMenu("file",
-		fyne.NewMenuItem("open code MIF", func() { fileSelect(fyneReadMIFCode) }),
-		fyne.NewMenuItem("open char MIF", func() { fileSelect(fyneReadMIFChar) }),
+		fyne.NewMenuItem("open code MIF", func() { fileSelect(fyneReadMIFCode, "Open code MIF") }),
+		fyne.NewMenuItem("open char MIF", func() { fileSelect(fyneReadMIFChar, "Open char MIF") }),
 	)
 
 	// "options" menu toolbar
