@@ -34,7 +34,7 @@ func getFiles() (codem, charm io.ReadCloser) {
 		charm, err = os.Open(*initialChar)
 		if err != nil {
 			dialog.Message(
-				"Reading %v failed:\n%v\n", *initialCode, err.Error()).Error()
+				"Reading %v failed:\n%v\n", *initialChar, err.Error()).Error()
 			os.Exit(-1)
 		}
 	}
