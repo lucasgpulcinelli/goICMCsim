@@ -48,23 +48,18 @@ func validateFileAndShowError(f fyne.URIReadCloser, err error) {
 func makeMainMenu() {
 	// both file dialog window popup instance (creates a little window to choose
 	// a file for either a code or char MIF file)
-	openCodeDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err)
-			fyneReadMIFCode(f)
-
-		}, window)
-
-	openCharDialog := dialog.NewFileOpen(
-		func(f fyne.URIReadCloser, err error) {
-			validateFileAndShowError(f, err)
-			fyneReadMIFChar(f)
-		}, window)
-
 	// "file" menu toolbar
 	file := fyne.NewMenu("file",
-		fyne.NewMenuItem("open code MIF", func() { openCodeDialog.Show() }),
-		fyne.NewMenuItem("open char MIF", func() { openCharDialog.Show() }),
+		fyne.NewMenuItem("open code MIF", func() { openFile(
+			func(f fyne.URIReadCloser, err error) {
+				validateFileAndShowError(f, err)
+				fyneReadMIFCode(f)
+			}) }),
+		fyne.NewMenuItem("open char MIF", func() { openFile(
+			func(f fyne.URIReadCloser, err error) {
+				validateFileAndShowError(f, err)
+				fyneReadMIFChar(f)
+			}) }),
 	)
 
 	// "options" menu toolbar
