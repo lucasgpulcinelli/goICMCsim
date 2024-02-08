@@ -77,6 +77,7 @@ There are many ways in which you can participate in this project, for example:
 
 * [Submit bugs and feature requests](https://github.com/lucasgpulcinelli/goICMCsim/issues), and help us verify as they are checked in
 * Review [source code changes](https://github.com/lucasgpulcinelli/goICMCsim/pulls)
+* [Test on macOS](https://github.com/lucasgpulcinelli/goICMCsim/labels/macOS%20test), and help us maintain compatibility on all platforms
 
 If you're interested in solving problems and contributing directly to the code base, take a look at the [issue page](https://github.com/lucasgpulcinelli/goICMCsim/issues). And if you're making your first contribution, look for the tag [good first issue](https://github.com/lucasgpulcinelli/goICMCsim/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
