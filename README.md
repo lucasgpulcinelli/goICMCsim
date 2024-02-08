@@ -1,4 +1,14 @@
-# GO ICMC Simulator
+![# GO ICMC Simulator](img/goICMCsim_08_T.jpeg)
+<p align="center">
+<img src="https://img.shields.io/github/go-mod/go-version/lucasgpulcinelli/goICMCsim?logo=go"/>
+<a href="https://github.com/lucasgpulcinelli/goICMCsim/issues?q=is%3Aissue+is%3Aopen"><img src="https://img.shields.io/github/issues/lucasgpulcinelli/goICMCsim?color=red"></a>
+<a href="https://github.com/lucasgpulcinelli/goICMCsim/issues?q=is%3Aissue+is%3Aclosed"><img src="https://img.shields.io/github/issues-closed/lucasgpulcinelli/goICMCsim?color=green"></a>
+<a href="https://github.com/lucasgpulcinelli/goICMCsim/releases"><img src="https://img.shields.io/github/v/release/lucasgpulcinelli/goICMCsim"/></a>
+<img src="https://img.shields.io/github/license/lucasgpulcinelli/goICMCsim"/>
+</p>
+
+# Resume
+
 This program is a simulator for the ICMC architecture (defined [here](https://github.com/simoesusp/Processador-ICMC/)), it has many upgraded functionalities in comparision with the c++ simulator, namely:
 - A resizable window and fullscreen cabability;
 - An instruction scroll to view all instructions and data being modified in real time;
@@ -71,6 +81,7 @@ An open source project is never complete. Please help the project by submitting 
 # Contributors
 The main contributors to the project are listes here:
 - Lucas Eduardo Gulka Pulcinelli ([github](https://github.com/lucasgpulcinelli))
+- Isaac Santos Soares ([github](https://github.com/iss2718))
 
 Special thanks to:
 - Artur Brenner Weber ([github](https://github.com/ArturWeber)), for providing macOS/arm64 builds and helping with documentation
