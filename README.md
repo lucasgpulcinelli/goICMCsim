@@ -1,6 +1,6 @@
 # 🖥️ GO ICMC Simulator
 
-![GO ICMC Simulator](https://github.com/lucasgpulcinelli/goICMCsim/assets/11618151/da81d732-5cb4-4f41-9128-37ae864ceac9)
+![GO ICMC Simulator Cover](https://github.com/lucasgpulcinelli/goICMCsim/assets/11618151/da81d732-5cb4-4f41-9128-37ae864ceac9)
 
 <p align="center">
   <img src="https://img.shields.io/github/go-mod/go-version/lucasgpulcinelli/goICMCsim?logo=go"/>
