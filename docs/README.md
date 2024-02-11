@@ -1,7 +1,5 @@
 # 🖥️ GO ICMC Simulator Documentation
 
-![goICMCsim Documentation](https://github.com/ISS2718/goICMCsim/assets/11618151/58cd3eb5-234d-4322-b421-7ea58822330f)
-
 Welcome to the documentation for the GO ICMC Simulator! This documentation serves as a guide for users and contributors to understand and utilize the features of the simulator effectively.
 
 ## 📝 Summary
