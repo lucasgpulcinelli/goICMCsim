@@ -47,7 +47,7 @@ To add or modify instructions:
 1. Choose an opcode for your instruction.
 2. Add it to the constants list in `processor/Instruction.go`.
 3. Add your instruction data to the `AllInstructions` list in the same file, including the opcode, mnemonic string, instruction size, and execution function.
-4. Implement the execution function. See the example in the [documentation](docs/README.md/#go-icmc-simulator-documentation) for details.
+4. Implement the execution function. See the example in the [documentation](docs/README.md) for details.
 
 ## 🤝 Contributing
 An open-source project is never complete. You can contribute by:

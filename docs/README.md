@@ -14,7 +14,7 @@ The GO ICMC Simulator is a program designed to simulate the ICMC architecture, o
     * [📚 Table of Contents](#📚-table-of-contents)
     * [🤝 Contributing to the Documentation](#🤝-contributing-to-the-documentation)
         - [⚠️ Keep our docs running smoother than a well-tuned simulator](#⚠️-keep-our-docs-running-smoother-than-a-well-tuned-simulator)
-2. [📝 Adding/Modifying Instructions](./AddingModifyingInstructions.md/#📝-addingmodifying-instructions)
+2. [📝 Adding/Modifying Instructions](AddingModifyingInstructions.md/#📝-addingmodifying-instructions)
     * [🛠️ How to add/modify instructions in the simulator](AddingModifyingInstructions.md/#🛠️-how-to-addmodify-instructions-in-the-simulator)
     * [📋 An instruction example](AddingModifyingInstructions.md/#📋-an-instruction-example)
         - [🔹Instruction Encoding](AddingModifyingInstructions.md/#🔹-instruction-encoding)
