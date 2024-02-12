@@ -20,7 +20,7 @@ var (
 	icmcSimulator  *processor.ICMCProcessor // main simulator instance itself
 	simulatorMutex sync.Mutex               // mutex to sync simulator actions
 
-	currentKey        atomic.Value   // current key pressed by the user in ascii
+	currentKey        atomic.Int32   // current key pressed by the user in ascii
 	instructionPeriod *time.Duration // period between instructions
 	window            fyne.Window    // main window instance for the ICMC simulator
 )
@@ -29,8 +29,8 @@ var (
 // the current key pressed and null it out to make sure the key for a single
 // press is only read once by the processor.
 func FyneInChar() (uint8, error) {
-	ret := currentKey.Swap(uint8(255))
-	return ret.(uint8), nil
+	ret := currentKey.Swap(255)
+	return uint8(ret), nil
 }
 
 // setupInput creates hooks for when the user types keys while the simulator
@@ -42,27 +42,27 @@ func setupInput() {
 		if icmcSimulator.IsRunning {
 			switch ev.Name {
 			case fyne.KeyReturn:
-				currentKey.Store(uint8('\r'))
+				currentKey.Store('\r')
 			case fyne.KeyBackspace:
-				currentKey.Store(uint8(8))
+				currentKey.Store(8)
 			case fyne.KeyDelete:
-				currentKey.Store(uint8(127))
+				currentKey.Store(127)
 			case fyne.KeyEscape:
-				currentKey.Store(uint8(27))
+				currentKey.Store(27)
 			case fyne.KeyUp:
-				currentKey.Store(uint8(38))
+				currentKey.Store(38)
 			case fyne.KeyDown:
-				currentKey.Store(uint8(40))
+				currentKey.Store(40)
 			case fyne.KeyLeft:
-				currentKey.Store(uint8(37))
+				currentKey.Store(37)
 			case fyne.KeyRight:
-				currentKey.Store(uint8(39))
+				currentKey.Store(39)
 			}
 		}
 	})
 	window.Canvas().SetOnTypedRune(func(r rune) {
 		if icmcSimulator.IsRunning {
-			currentKey.Store(uint8(r))
+			currentKey.Store(r)
 		}
 	})
 }
@@ -73,7 +73,7 @@ func StartSimulatorWindow(codem, charm io.ReadCloser) {
 	instructionPeriod = new(time.Duration)
 
 	// initializes the first key pressed with 255
-	currentKey.Store(uint8(255))
+	currentKey.Store(255)
 
 	// create a new processor with out input and output functions
 	icmcSimulator = processor.NewEmptyProcessor(FyneInChar, draw.FyneOutChar)
