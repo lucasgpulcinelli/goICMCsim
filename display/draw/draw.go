@@ -22,7 +22,7 @@ var (
 	screen          *image.Paletted // the actual image with the simulator output characters
 	charMIF         [128][8]byte    // the binary representation of characters: an 8x8 bitfield for each ascii character
 	viewport        *canvas.Image   // the fyne component to display screen
-	shouldDraw      atomic.Value    // an atomic variable to ease the draw thread but keep it from missing updates
+	shouldDraw      atomic.Int32    // an atomic variable to ease the draw thread but keep it from missing updates
 	icmcColors      = []color.Color{
 		color.RGBA{0xff, 0xff, 0xff, 0xff},
 		color.RGBA{0xa5, 0x2a, 0x2a, 0xff},
